@@ -1,123 +1,181 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useState } from "react";
-
-import StatCard from "../components/StatCard";
-import CourseCard from "../components/CourseCard";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeScreen() {
-  const [selectedCourse, setSelectedCourse] = useState(null);
-
-  const courses = [
-    {
-      title: "Data Structures",
-      code: "COMP 2140",
-      grade: "B+ (87%)",
-      credits: 3,
-    },
-    {
-      title: "Calculus II",
-      code: "MATH 2020",
-      grade: "B (82%)",
-      credits: 4,
-    },
-    {
-      title: "Physics I",
-      code: "PHYS 1050",
-      grade: "C+ (79%)",
-      credits: 4,
-    },
-    {
-      title: "Academic Writing",
-      code: "ENG 0930",
-      grade: "A (92%)",
-      credits: 3,
-    },
-  ];
-
-  if (selectedCourse) {
-    return (
-      <CourseDetailScreen
-        course={selectedCourse}
-        onBack={() => setSelectedCourse(null)}
-      />
-    );
-  }
-
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 30 }}
+      contentContainerStyle={{ paddingBottom: 120 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Fall 2024</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Ionicons name="school-outline" size={20} color="#FFF" />
+        <Text style={styles.welcome}>Welcome back! 👋</Text>
+        <Text style={styles.semester}>Fall 2024</Text>
+      </View>
 
-      {/* Primary GPA */}
-      <View style={styles.primaryCard}>
-        <Text style={styles.primaryValue}>3.29</Text>
-        <Text style={styles.primaryLabel}>Cumulative GPA</Text>
+      {/* Cumulative GPA */}
+      <View style={styles.gpaCard}>
+        <Text style={styles.gpaValue}>3.29</Text>
+        <Text style={styles.gpaLabel}>Cumulative GPA</Text>
       </View>
 
       {/* Stats */}
-      <View style={styles.row}>
-        <StatCard value="3.20" label="Semester GPA" />
-        <StatCard value="17" label="Credits" />
-        <StatCard value="4" label="Courses" />
+      <View style={styles.statsRow}>
+        <Stat value="3.20" label="Semester GPA" />
+        <Stat value="17" label="Credits" />
+        <Stat value="4" label="Courses" />
       </View>
 
-      {/* Courses */}
+      {/* Current Courses */}
       <Text style={styles.sectionTitle}>Current Courses</Text>
 
-      {courses.map((course) => (
-        <CourseCard
-          key={course.code}
-          title={course.title}
-          code={course.code}
-          grade={course.grade}
-          onPress={() => setSelectedCourse(course)}
-        />
-      ))}
+      <CourseCard
+        title="Data Structures"
+        code="COMP 2140"
+        grade="B+ (87%)"
+      />
+
+      <CourseCard
+        title="Calculus II"
+        code="MATH 2020"
+        grade="B (82%)"
+      />
+
+      <CourseCard
+        title="Physics I"
+        code="PHYS 1050"
+        grade="C+ (79%)"
+      />
+
+      <CourseCard
+        title="Academic Writing"
+        code="ENG 0930"
+        grade="A (92%)"
+      />
     </ScrollView>
   );
 }
 
+/* ---------- Small Components ---------- */
+
+function Stat({ value, label }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function CourseCard({ title, code, grade }) {
+  return (
+    <View style={styles.courseCard}>
+      <View>
+        <Text style={styles.courseTitle}>{title}</Text>
+        <Text style={styles.courseCode}>{code}</Text>
+      </View>
+
+      <Text style={styles.grade}>{grade}</Text>
+    </View>
+  );
+}
+
+/* ---------- Styles ---------- */
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: "#0B1020",
-    padding: 20,
+    padding: 16,
   },
-  title: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontWeight: "600",
+
+  header: {
     marginBottom: 20,
   },
-  primaryCard: {
+  welcome: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#FFF",
+    marginTop: 8,
+  },
+  semester: {
+    fontSize: 14,
+    color: "#AAB1C5",
+    marginTop: 4,
+  },
+
+  gpaCard: {
     backgroundColor: "#1C2436",
-    borderRadius: 16,
-    paddingVertical: 26,
+    borderRadius: 20,
+    padding: 24,
     alignItems: "center",
     marginBottom: 20,
   },
-  primaryValue: {
-    color: "#FFFFFF",
-    fontSize: 36,
-    fontWeight: "700",
+  gpaValue: {
+    fontSize: 40,
+    fontWeight: "800",
+    color: "#FFF",
   },
-  primaryLabel: {
-    color: "#9AA3B2",
-    marginTop: 6,
+  gpaLabel: {
     fontSize: 14,
+    color: "#AAB1C5",
+    marginTop: 4,
   },
-  row: {
+
+  statsRow: {
     flexDirection: "row",
-    gap: 12,
+    justifyContent: "space-between",
     marginBottom: 24,
   },
+  stat: {
+    flex: 1,
+    backgroundColor: "#1C2436",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFF",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#AAB1C5",
+    marginTop: 4,
+  },
+
   sectionTitle: {
-    color: "#FFFFFF",
     fontSize: 18,
+    fontWeight: "700",
+    color: "#FFF",
+    marginBottom: 12,
+  },
+
+  courseCard: {
+    backgroundColor: "#1C2436",
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  courseTitle: {
+    fontSize: 15,
     fontWeight: "600",
-    marginBottom: 14,
+    color: "#FFF",
+  },
+  courseCode: {
+    fontSize: 12,
+    color: "#AAB1C5",
+    marginTop: 2,
+  },
+  grade: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4ADE80",
   },
 });
