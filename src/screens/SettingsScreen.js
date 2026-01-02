@@ -1,4 +1,12 @@
-import { View, Text, StyleSheet, Pressable, Switch } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Switch,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 
@@ -6,71 +14,74 @@ export default function SettingsScreen() {
   const [darkMode, setDarkMode] = useState(false);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <Text style={styles.header}>Settings</Text>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Text style={styles.header}>Settings</Text>
 
-      {/* Profile Card */}
-      <View style={styles.card}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>Z</Text>
-        </View>
+        {/* Profile Card */}
+        <View style={styles.card}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>Z</Text>
+          </View>
 
-        <View>
-          <Text style={styles.name}>Zaki Saud</Text>
-          <Text style={styles.email}>zakisaud2023@gmail.com</Text>
+          <View>
+            <Text style={styles.name}>Zaki Saud</Text>
+            <Text style={styles.email}>zakisaud2023@gmail.com</Text>
 
-          <View style={styles.badge}>
-            <Ionicons name="school-outline" size={14} color="#6C7CFF" />
-            <Text style={styles.badgeText}>GradeTrack User</Text>
+            <View style={styles.badge}>
+              <Ionicons name="school-outline" size={14} color="#6C7CFF" />
+              <Text style={styles.badgeText}>GradeTrack User</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <Stat value="3" label="Semesters" />
-        <Stat value="5" label="Courses" />
-        <Stat value="19" label="Assessments" />
-      </View>
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <Stat value="3" label="Semesters" />
+          <Stat value="5" label="Courses" />
+          <Stat value="19" label="Assessments" />
+        </View>
 
-      {/* Appearance */}
-      <Section title="APPEARANCE">
-        <Row
-          icon="sunny-outline"
-          title="Dark Mode"
-          subtitle="Toggle dark theme"
-          right={
-            <Switch
-              value={darkMode}
-              onValueChange={setDarkMode}
-            />
-          }
-        />
-      </Section>
+        {/* Appearance */}
+        <Section title="APPEARANCE">
+          <Row
+            icon="sunny-outline"
+            title="Dark Mode"
+            subtitle="Toggle dark theme"
+            right={
+              <Switch value={darkMode} onValueChange={setDarkMode} />
+            }
+          />
+        </Section>
 
-      {/* Data */}
-      <Section title="DATA">
-        <Row
-          icon="sync-outline"
-          title="Sync Data"
-          subtitle="Data syncs automatically"
-        />
-        <Row
-          icon="trash-outline"
-          title="Clear All Data"
-          subtitle="Delete all semesters, courses, and assessments"
-          danger
-        />
-      </Section>
+        {/* Data */}
+        <Section title="DATA">
+          <Row
+            icon="sync-outline"
+            title="Sync Data"
+            subtitle="Data syncs automatically"
+          />
+          <Row
+            icon="trash-outline"
+            title="Clear All Data"
+            subtitle="Delete all semesters, courses, and assessments"
+            danger
+          />
+        </Section>
 
-      {/* Account */}
-      <Section title="ACCOUNT">
-        <Row icon="help-circle-outline" title="Help & Support" />
-        <Row icon="shield-outline" title="Privacy" />
-        <Row icon="log-out-outline" title="Sign Out" />
-      </Section>
-    </View>
+        {/* Account */}
+        <Section title="ACCOUNT">
+          <Row icon="help-circle-outline" title="Help & Support" />
+          <Row icon="shield-outline" title="Privacy" />
+          <Row icon="log-out-outline" title="Sign Out" />
+        </Section>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -104,7 +115,9 @@ function Row({ icon, title, subtitle, right, danger }) {
         </View>
       </View>
 
-      {right ? right : <Ionicons name="chevron-forward" size={18} color="#9AA3B2" />}
+      {right ? right : (
+        <Ionicons name="chevron-forward" size={18} color="#9AA3B2" />
+      )}
     </Pressable>
   );
 }
@@ -121,10 +134,18 @@ function Stat({ value, label }) {
 /* ---------- Styles ---------- */
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  safe: {
+    flex: 1,
     backgroundColor: "#F7F8FC",
   },
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 140, // BottomTabBar space
+  },
+
   header: {
     fontSize: 24,
     fontWeight: "700",

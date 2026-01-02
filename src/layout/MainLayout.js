@@ -1,26 +1,26 @@
-// src/layout/MainLayout.js
-import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from "react-native";
 
-export default function MainLayout({ children }) {
-    return (
-        <SafeAreaView style={styles.safe}>
-            <ScrollView
-                contentContainerStyle={styles.scroll}
-                showsVerticalScrollIndicator={false}
-            >
-                {children}
-            </ScrollView>
-        </SafeAreaView>
-    );
+export default function MainLayout({ children, dark }) {
+  return (
+    <ScrollView
+      style={[
+        styles.container,
+        { backgroundColor: dark ? "#0B1020" : "#F7F8FC" },
+      ]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {children}
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
-    safe: {
-        flex: 1,
-        backgroundColor: '#0B1020',
-    },
-    scroll: {
-        padding: 16,
-        paddingBottom: 120, // IMPORTANT: space for bottom tab bar
-    },
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 120, // bottom tab space
+  },
 });
