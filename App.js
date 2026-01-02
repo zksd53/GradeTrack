@@ -6,8 +6,8 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Grader is running ✅</Text>
-      {/* <BottomTabBar/> */}
-      <MainLayout />
+      <BottomTabBar/>
+      {/* <MainLayout /> */}
     </View>
   )
 }

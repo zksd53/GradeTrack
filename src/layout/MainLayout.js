@@ -1,44 +1,26 @@
-import { View, StyleSheet } from "react-native";
-import { useState } from "react";
+// src/layout/MainLayout.js
+import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 
-import BottomTabBar from "../components/BottomTabBar";
-import HomeScreen from "../screens/HomeScreen";
-import SemestersScreen from "../screens/SemestersScreen";
-import SettingsScreen from "../screens/SettingsScreen";
-
-const TAB_BAR_HEIGHT = 70;
-
-export default function MainLayout() {
-    const [activeTab, setActiveTab] = useState("home");
-
-    let Screen = null;
-    if (activeTab === "home") Screen = <HomeScreen />;
-    if (activeTab === "semesters") Screen = <SemestersScreen />;
-    if (activeTab === "settings") Screen = <SettingsScreen />;
-
+export default function MainLayout({ children }) {
     return (
-        <View style={styles.container}>
-            {/* Screen content */}
-            <View style={styles.content}>{Screen}</View>
-
-            {/* Bottom tab bar (ONLY visible base) */}
-            <BottomTabBar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                height={TAB_BAR_HEIGHT}
-            />
-        </View>
+        <SafeAreaView style={styles.safe}>
+            <ScrollView
+                contentContainerStyle={styles.scroll}
+                showsVerticalScrollIndicator={false}
+            >
+                {children}
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    safe: {
         flex: 1,
-        backgroundColor: "#0B1020",
+        backgroundColor: '#0B1020',
     },
-    content: {
-        flex: 1,
-        paddingBottom: TAB_BAR_HEIGHT,
-        backgroundColor: "transparent", // IMPORTANT
+    scroll: {
+        padding: 16,
+        paddingBottom: 120, // IMPORTANT: space for bottom tab bar
     },
 });

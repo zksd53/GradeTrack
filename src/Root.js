@@ -1,11 +1,12 @@
 import "react-native-gesture-handler";
+
 import { NavigationContainer } from "@react-navigation/native";
-import BottomTabs from "./navigation/BottomTabs";
+import BottomTabBar from "./src/components/BottomTabBar";
 
 export default function Root() {
   return (
     <NavigationContainer>
-      {/* <BottomTabs /> */}
+      {/* <BottomTabBar /> */}
     </NavigationContainer>
   );
 }
