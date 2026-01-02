@@ -1,45 +1,58 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function SemestersScreen() {
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <Text style={styles.header}>Semesters</Text>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Text style={styles.header}>Semesters</Text>
 
-      {/* Add Semester Button */}
-      <Pressable style={styles.addButton}>
-        <Ionicons name="add" size={20} color="#FFF" />
-        <Text style={styles.addText}>Add New Semester</Text>
-      </Pressable>
+        {/* Add Semester Button */}
+        <Pressable style={styles.addButton}>
+          <Ionicons name="add" size={20} color="#FFF" />
+          <Text style={styles.addText}>Add New Semester</Text>
+        </Pressable>
 
-      {/* Semester Cards */}
-      <SemesterCard
-        gpa="3.20"
-        title="Fall 2024"
-        courses="3 courses"
-        credits="10 credits"
-        status="In Progress"
-        current
-      />
+        {/* Semester Cards */}
+        <SemesterCard
+          gpa="3.20"
+          title="Fall 2024"
+          courses="3 courses"
+          credits="10 credits"
+          status="In Progress"
+          current
+        />
 
-      <SemesterCard
-        gpa="3.43"
-        title="Spring 2024"
-        courses="2 courses"
-        credits="7 credits"
-        status="Completed"
-      />
+        <SemesterCard
+          gpa="3.43"
+          title="Spring 2024"
+          courses="2 courses"
+          credits="7 credits"
+          status="Completed"
+        />
 
-      <SemesterCard
-        gpa="0.00"
-        title="Fall 2023"
-        courses="0 courses"
-        credits="0 credits"
-        status="Completed"
-        empty
-      />
-    </View>
+        <SemesterCard
+          gpa="0.00"
+          title="Fall 2023"
+          courses="0 courses"
+          credits="0 credits"
+          status="Completed"
+          empty
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -112,10 +125,18 @@ function StatusBadge({ text }) {
 /* ---------- Styles ---------- */
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  safe: {
+    flex: 1,
     backgroundColor: "#F7F8FC",
   },
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 140, // BottomTabBar space
+  },
+
   header: {
     fontSize: 24,
     fontWeight: "700",
