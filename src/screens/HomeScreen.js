@@ -86,7 +86,7 @@ function CourseCard({ title, code, grade }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#0B1020",
+    backgroundColor: "#f5f5f5ff",
     padding: 16,
   },
 
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   welcome: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#FFF",
+    color: "#000000ff",
     marginTop: 8,
   },
   semester: {

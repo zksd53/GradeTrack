@@ -41,7 +41,7 @@ function Tab({ label, active, onPress, icon }) {
                     name={active ? icon : `${icon}-outline`}
                     size={22}
                     color={active ? "#6C7CFF" : "#9AA3B2"}
-                    style={{ marginBottom: 4 }}
+                    style={{ marginBottom: 8 }}
                 />
             )}
 
@@ -75,18 +75,20 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
+        paddingTop : 5.5,
     },
     text: {
         color: "#9AA3B2",
         fontSize: 13,
         fontWeight: "500",
+        marginBottom : 1,
     },
     active: {
         color: "#FFFFFF",
         fontWeight: "600",
     },
     dot: {
-        marginTop: 6,
+        marginTop: 3,
         width: 6,
         height: 6,
         borderRadius: 3,
