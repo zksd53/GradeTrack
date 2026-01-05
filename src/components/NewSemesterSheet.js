@@ -9,7 +9,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 
-export default function NewSemesterSheet({ visible, onClose }) {
+export default function NewSemesterSheet({
+    visible,
+    onClose,
+    onCreate,   // 👈 STEP-1: parent se aaya hua function
+}) {
     // TERM
     const [term, setTerm] = useState("Fall");
     const [showTermDropdown, setShowTermDropdown] = useState(false);
@@ -22,7 +26,7 @@ export default function NewSemesterSheet({ visible, onClose }) {
     const [status, setStatus] = useState("Planned");
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
-    // CURRENT SEMESTER TOGGLE
+    // CURRENT SEMESTER
     const [isCurrent, setIsCurrent] = useState(false);
 
     const years = Array.from({ length: 21 }, (_, i) => 2020 + i);
@@ -152,8 +156,25 @@ export default function NewSemesterSheet({ visible, onClose }) {
                         </View>
                     </Pressable>
 
-                    {/* Create Button (logic later) */}
-                    <Pressable style={styles.createBtn}>
+                    {/* CREATE SEMESTER */}
+                    <Pressable
+                        style={styles.createBtn}
+                        onPress={() => {
+                            // 👇 STEP-1 ACTUAL USE
+                            onCreate({
+                                id: `${term}-${year}`,
+                                term,
+                                year,
+                                status,
+                                gpa: "0.00",
+                                courses: "0 courses",
+                                credits: "0 credits",
+                                current: isCurrent,
+                            });
+
+                            onClose();
+                        }}
+                    >
                         <Text style={styles.createText}>Create Semester</Text>
                     </Pressable>
                 </View>
@@ -263,7 +284,6 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
 
-    /* TOGGLE */
     toggle: {
         width: 44,
         height: 24,
@@ -274,7 +294,7 @@ const styles = StyleSheet.create({
     },
 
     toggleActive: {
-        backgroundColor: "#22C55E", // green
+        backgroundColor: "#22C55E",
     },
 
     toggleKnob: {

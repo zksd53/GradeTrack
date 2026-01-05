@@ -10,8 +10,49 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import NewSemesterSheet from "../components/NewSemesterSheet";
 
+const TERM_ORDER = {
+  Winter: 3,
+  Summer: 2,
+  Fall: 1,
+};
+
 export default function SemestersScreen() {
   const [showNewSemester, setShowNewSemester] = useState(false);
+
+  const [semesters, setSemesters] = useState([
+    {
+      id: "fall-2024",
+      term: "Fall",
+      year: 2024,
+      status: "In Progress",
+      gpa: "3.20",
+      courses: "3 courses",
+      credits: "10 credits",
+      current: true,
+    },
+    {
+      id: "spring-2024",
+      term: "Spring",
+      year: 2024,
+      status: "Completed",
+      gpa: "3.43",
+      courses: "2 courses",
+      credits: "7 credits",
+    },
+  ]);
+
+  const handleAddSemester = (newSemester) => {
+    const updated = [...semesters, newSemester];
+
+    updated.sort((a, b) => {
+      if (b.year !== a.year) {
+        return b.year - a.year;
+      }
+      return TERM_ORDER[a.term] - TERM_ORDER[b.term];
+    });
+
+    setSemesters(updated);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -20,10 +61,8 @@ export default function SemestersScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <Text style={styles.header}>Semesters</Text>
 
-        {/* Add Semester Button */}
         <Pressable
           style={styles.addButton}
           onPress={() => setShowNewSemester(true)}
@@ -32,38 +71,23 @@ export default function SemestersScreen() {
           <Text style={styles.addText}>Add New Semester</Text>
         </Pressable>
 
-        {/* Semester Cards */}
-        <SemesterCard
-          gpa="3.20"
-          title="Fall 2024"
-          courses="3 courses"
-          credits="10 credits"
-          status="In Progress"
-          current
-        />
-
-        <SemesterCard
-          gpa="3.43"
-          title="Spring 2024"
-          courses="2 courses"
-          credits="7 credits"
-          status="Completed"
-        />
-
-        <SemesterCard
-          gpa="0.00"
-          title="Fall 2023"
-          courses="0 courses"
-          credits="0 credits"
-          status="Completed"
-          empty
-        />
+        {semesters.map((s) => (
+          <SemesterCard
+            key={s.id}
+            gpa={s.gpa}
+            title={`${s.term} ${s.year}`}
+            courses={s.courses}
+            credits={s.credits}
+            status={s.status}
+            current={s.current}
+          />
+        ))}
       </ScrollView>
 
-      {/* New Semester Bottom Sheet */}
       <NewSemesterSheet
         visible={showNewSemester}
         onClose={() => setShowNewSemester(false)}
+        onCreate={handleAddSemester}
       />
     </SafeAreaView>
   );
@@ -71,20 +95,13 @@ export default function SemestersScreen() {
 
 /* ---------- Semester Card ---------- */
 
-function SemesterCard({ gpa, title, courses, credits, status, current, empty }) {
+function SemesterCard({ gpa, title, courses, credits, status, current }) {
   return (
-    <Pressable style={styles.card}>
-      {/* GPA Circle */}
-      <View
-        style={[
-          styles.gpaCircle,
-          empty && { borderColor: "#D1D5DB" },
-        ]}
-      >
+    <View style={styles.card}>
+      <View style={styles.gpaCircle}>
         <Text style={styles.gpaText}>{gpa}</Text>
       </View>
 
-      {/* Info */}
       <View style={styles.info}>
         <View style={styles.row}>
           <Text style={styles.title}>{title}</Text>
@@ -98,13 +115,10 @@ function SemesterCard({ gpa, title, courses, credits, status, current, empty }) 
         <StatusBadge text={status} />
       </View>
 
-      {/* Arrow */}
       <Ionicons name="chevron-forward" size={20} color="#9AA3B2" />
-    </Pressable>
+    </View>
   );
 }
-
-/* ---------- Small Components ---------- */
 
 function Badge({ text }) {
   return (
@@ -138,23 +152,11 @@ function StatusBadge({ text }) {
 /* ---------- Styles ---------- */
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#F7F8FC",
-  },
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 140, // BottomTabBar space
-  },
+  safe: { flex: 1, backgroundColor: "#F7F8FC" },
+  container: { flex: 1 },
+  content: { padding: 16, paddingBottom: 140 },
 
-  header: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
+  header: { fontSize: 24, fontWeight: "700", marginBottom: 16 },
 
   addButton: {
     flexDirection: "row",
@@ -166,11 +168,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     gap: 8,
   },
-  addText: {
-    color: "#FFF",
-    fontSize: 15,
-    fontWeight: "600",
-  },
+  addText: { color: "#FFF", fontSize: 15, fontWeight: "600" },
 
   card: {
     flexDirection: "row",
@@ -191,28 +189,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
-  gpaText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  gpaText: { fontSize: 15, fontWeight: "700" },
 
-  info: {
-    flex: 1,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  meta: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginVertical: 4,
-  },
+  info: { flex: 1 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8 },
+  title: { fontSize: 16, fontWeight: "600" },
+  meta: { fontSize: 13, color: "#6B7280", marginVertical: 4 },
 
   currentBadge: {
     backgroundColor: "#E0E7FF",
@@ -232,20 +214,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 10,
   },
-  progress: {
-    backgroundColor: "#E0ECFF",
-  },
-  completed: {
-    backgroundColor: "#E7F8ED",
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  progressText: {
-    color: "#2563EB",
-  },
-  completedText: {
-    color: "#15803D",
-  },
+  progress: { backgroundColor: "#E0ECFF" },
+  completed: { backgroundColor: "#E7F8ED" },
+  statusText: { fontSize: 12, fontWeight: "600" },
+  progressText: { color: "#2563EB" },
+  completedText: { color: "#15803D" },
 });
