@@ -7,8 +7,12 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import NewSemesterSheet from "../components/NewSemesterSheet";
 
 export default function SemestersScreen() {
+  const [showNewSemester, setShowNewSemester] = useState(false);
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -20,7 +24,10 @@ export default function SemestersScreen() {
         <Text style={styles.header}>Semesters</Text>
 
         {/* Add Semester Button */}
-        <Pressable style={styles.addButton}>
+        <Pressable
+          style={styles.addButton}
+          onPress={() => setShowNewSemester(true)}
+        >
           <Ionicons name="add" size={20} color="#FFF" />
           <Text style={styles.addText}>Add New Semester</Text>
         </Pressable>
@@ -52,6 +59,12 @@ export default function SemestersScreen() {
           empty
         />
       </ScrollView>
+
+      {/* New Semester Bottom Sheet */}
+      <NewSemesterSheet
+        visible={showNewSemester}
+        onClose={() => setShowNewSemester(false)}
+      />
     </SafeAreaView>
   );
 }
