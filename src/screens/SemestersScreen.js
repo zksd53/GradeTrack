@@ -16,7 +16,7 @@ const TERM_ORDER = {
   Fall: 1,
 };
 
-export default function SemestersScreen() {
+export default function SemestersScreen({ navigation }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
 
   const [semesters, setSemesters] = useState([
@@ -45,9 +45,7 @@ export default function SemestersScreen() {
     const updated = [...semesters, newSemester];
 
     updated.sort((a, b) => {
-      if (b.year !== a.year) {
-        return b.year - a.year;
-      }
+      if (b.year !== a.year) return b.year - a.year;
       return TERM_ORDER[a.term] - TERM_ORDER[b.term];
     });
 
@@ -80,6 +78,13 @@ export default function SemestersScreen() {
             credits={s.credits}
             status={s.status}
             current={s.current}
+            onPress={() =>
+              navigation.navigate("SemesterDetail", {
+                semesterId: s.id,
+                term: s.term,
+                year: s.year,
+              })
+            }
           />
         ))}
       </ScrollView>
@@ -95,9 +100,17 @@ export default function SemestersScreen() {
 
 /* ---------- Semester Card ---------- */
 
-function SemesterCard({ gpa, title, courses, credits, status, current }) {
+function SemesterCard({
+  gpa,
+  title,
+  courses,
+  credits,
+  status,
+  current,
+  onPress,
+}) {
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.gpaCircle}>
         <Text style={styles.gpaText}>{gpa}</Text>
       </View>
@@ -116,9 +129,11 @@ function SemesterCard({ gpa, title, courses, credits, status, current }) {
       </View>
 
       <Ionicons name="chevron-forward" size={20} color="#9AA3B2" />
-    </View>
+    </Pressable>
   );
 }
+
+/* ---------- Badges ---------- */
 
 function Badge({ text }) {
   return (

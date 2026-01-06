@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Text } from "react-native";
+import SemestersStack from "./SemestersStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -13,13 +14,17 @@ function Screen({ title }) {
 
 export default function BottomTabs() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Home">
         {() => <Screen title="Home" />}
       </Tab.Screen>
-      <Tab.Screen name="Semesters">
-        {() => <Screen title="Semesters" />}
-      </Tab.Screen>
+
+      {/* ✅ THIS MUST BE A VALID COMPONENT */}
+      <Tab.Screen
+        name="Semesters"
+        component={SemestersStack}
+      />
+
       <Tab.Screen name="Settings">
         {() => <Screen title="Settings" />}
       </Tab.Screen>
