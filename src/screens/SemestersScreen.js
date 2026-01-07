@@ -7,14 +7,21 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import NewSemesterSheet from "../components/NewSemesterSheet";
+
+/* ---------- Constants ---------- */
 
 const TERM_ORDER = {
   Winter: 1,
   Summer: 2,
   Fall: 3,
 };
+
+const STORAGE_KEY = "SEMESTERS";
+
+/* ---------- Screen ---------- */
 
 export default function SemestersScreen({ navigation }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
@@ -41,6 +48,38 @@ export default function SemestersScreen({ navigation }) {
     },
   ]);
 
+  /* ---------- Load from phone memory ---------- */
+
+  const loadSemesters = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setSemesters(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.log("Failed to load semesters", e);
+    }
+  };
+
+  useEffect(() => {
+    loadSemesters();
+  }, []);
+
+  /* ---------- Save to phone memory ---------- */
+
+  const saveSemesters = async (data) => {
+    try {
+      await AsyncStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+      );
+    } catch (e) {
+      console.log("Failed to save semesters", e);
+    }
+  };
+
+  /* ---------- Add Semester ---------- */
+
   const handleAddSemester = (newSemester) => {
     const updated = [...semesters, newSemester];
 
@@ -50,7 +89,10 @@ export default function SemestersScreen({ navigation }) {
     });
 
     setSemesters(updated);
+    saveSemesters(updated);
   };
+
+  /* ---------- UI ---------- */
 
   return (
     <SafeAreaView style={styles.safe}>
