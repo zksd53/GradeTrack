@@ -28,6 +28,7 @@ export default function Root() {
                             semester={selectedSemester}
                             onBack={() => setSelectedSemester(null)}
                             onDelete={handleDeleteSemester}
+                            onAddCourse={handleAddCourse}   // 👈 THIS LINE WAS MISSING
                         />
                     );
 
@@ -43,6 +44,38 @@ export default function Root() {
                 return <HomeScreen />;
         }
     };
+    const handleAddCourse = async (semesterId, newCourse) => {
+        try {
+            const stored = await AsyncStorage.getItem(STORAGE_KEY);
+            if (!stored) return;
+
+            const semesters = JSON.parse(stored);
+
+            const updated = semesters.map((s) => {
+                if (s.id === semesterId) {
+                    return {
+                        ...s,
+                        courses: s.courses ? [...s.courses, newCourse] : [newCourse],
+                    };
+                }
+                return s;
+            });
+
+            await AsyncStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(updated)
+            );
+
+            // update selected semester in UI
+            const updatedSemester = updated.find(
+                (s) => s.id === semesterId
+            );
+            setSelectedSemester(updatedSemester);
+        } catch (e) {
+            console.log("Add course failed", e);
+        }
+    };
+
     const handleDeleteSemester = async (semesterId) => {
         try {
             const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -78,6 +111,7 @@ export default function Root() {
                 setActiveTab={setActiveTab}
             />
         </View>
+
     );
 }
 

@@ -8,11 +8,20 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import NewCourseSheet from "../components/NewCourseSheet";
+import { useEffect } from "react";
 
-export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
+export default function SemesterDetailScreen({ semester, onBack, onDelete, onAddCourse }) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
-    const [courses, setCourses] = useState([]);
+    const [courses, setCourses] = useState(semester.courses || []);
+    const totalCredits = courses.reduce(
+        (sum, c) => sum + c.credits,
+        0
+    );
+    useEffect(() => {
+        setCourses(semester.courses || []);
+    }, [semester]);
+
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -26,7 +35,10 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
                     <Text style={styles.title}>
                         {semester.term} {semester.year}
                     </Text>
-                    <Text style={styles.subtitle}>0 courses • 0 credits</Text>
+                    <Text style={styles.subtitle}>
+                        {courses.length} course{courses.length !== 1 ? "s" : ""} •{" "}
+                        {totalCredits} credits
+                    </Text>
                 </View>
 
                 {/* Delete button */}
@@ -41,10 +53,9 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
                     <Text style={styles.gpaText}>0.00</Text>
                 </View>
                 <Text style={styles.gpaLabel}>Semester GPA</Text>
-                <Text style={styles.creditText}>0 credits</Text>
+                <Text style={styles.creditText}>{totalCredits} credits</Text>
             </View>
 
-            {/* ---------- Add Course Button ---------- */}
             {/* ---------- Add Course Button ---------- */}
             <Pressable
                 style={styles.addCourseButton}
@@ -56,13 +67,37 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
 
 
             {/* ---------- Empty State ---------- */}
-            <View style={styles.empty}>
-                <Text style={styles.book}>📖</Text>
-                <Text style={styles.emptyTitle}>No courses yet</Text>
-                <Text style={styles.emptySub}>
-                    Add courses to start tracking your grades for this semester
-                </Text>
-            </View>
+            {courses.length === 0 && (
+                <View style={styles.empty}>
+                    <Text style={styles.book}>📖</Text>
+                    <Text style={styles.emptyTitle}>No courses yet</Text>
+                    <Text style={styles.emptySub}>
+                        Add courses to start tracking your grades for this semester
+                    </Text>
+                </View>
+            )}
+
+
+            {courses.map((course) => (
+                <View key={course.id} style={styles.courseCard}>
+                    <View style={styles.courseLeft}>
+                        <View style={styles.progressCircle}>
+                            <Text style={styles.progressText}>0%</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.courseInfo}>
+                        <Text style={styles.courseTitle}>{course.name}</Text>
+                        <Text style={styles.courseCode}>{course.code}</Text>
+                        <Text style={styles.courseCredits}>
+                            {course.credits} credits
+                        </Text>
+                    </View>
+
+                    <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                </View>
+            ))}
+
 
             {/* ---------- Delete Confirmation Modal ---------- */}
             {showDelete && (
@@ -96,8 +131,9 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
                 visible={showAddCourse}
                 onClose={() => setShowAddCourse(false)}
                 onCreate={(course) => {
-                    setCourses([...courses, course]);
+                    onAddCourse(semester.id, course);
                 }}
+
             />
 
         </SafeAreaView>
@@ -262,4 +298,53 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "600",
     },
+    courseCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFF",
+        borderRadius: 18,
+        padding: 16,
+        marginBottom: 14,
+    },
+
+    courseLeft: {
+        marginRight: 12,
+    },
+
+    progressCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 4,
+        borderColor: "#CBD5E1",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    progressText: {
+        fontSize: 12,
+        fontWeight: "700",
+    },
+
+    courseInfo: {
+        flex: 1,
+    },
+
+    courseTitle: {
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    courseCode: {
+        fontSize: 13,
+        color: "#6B7280",
+        marginTop: 2,
+    },
+
+    courseCredits: {
+        fontSize: 12,
+        color: "#6B7280",
+        marginTop: 2,
+    },
+
 });
