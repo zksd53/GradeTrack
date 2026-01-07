@@ -7,9 +7,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import NewCourseSheet from "../components/NewCourseSheet";
 
 export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
     const [showDelete, setShowDelete] = useState(false);
+    const [showAddCourse, setShowAddCourse] = useState(false);
+    const [courses, setCourses] = useState([]);
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -42,10 +45,15 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
             </View>
 
             {/* ---------- Add Course Button ---------- */}
-            <Pressable style={styles.addCourseButton}>
+            {/* ---------- Add Course Button ---------- */}
+            <Pressable
+                style={styles.addCourseButton}
+                onPress={() => setShowAddCourse(true)}
+            >
                 <Ionicons name="add" size={20} color="#FFF" />
                 <Text style={styles.addCourseText}>Add Course</Text>
             </Pressable>
+
 
             {/* ---------- Empty State ---------- */}
             <View style={styles.empty}>
@@ -82,7 +90,16 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete }) {
                         </Pressable>
                     </View>
                 </View>
+
             )}
+            <NewCourseSheet
+                visible={showAddCourse}
+                onClose={() => setShowAddCourse(false)}
+                onCreate={(course) => {
+                    setCourses([...courses, course]);
+                }}
+            />
+
         </SafeAreaView>
     );
 }
