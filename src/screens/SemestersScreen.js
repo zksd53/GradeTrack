@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NewSemesterSheet from "../components/NewSemesterSheet";
+import { Alert } from "react-native";
 
 /* ---------- Constants ---------- */
 
@@ -81,16 +82,42 @@ export default function SemestersScreen({ onOpenSemester }) {
   /* ---------- Add Semester ---------- */
 
   const handleAddSemester = (newSemester) => {
+    // 🔒 DUPLICATE CHECK (term + year)
+    const exists = semesters.some(
+      (s) =>
+        s.term === newSemester.term &&
+        s.year === newSemester.year
+    );
+
+    if (exists) {
+      Alert.alert(
+        "Semester already exists",
+        `${newSemester.term} ${newSemester.year} has already been created.`
+      );
+      return;
+    }
+
     const updated = [...semesters, newSemester];
 
     updated.sort((a, b) => {
-      if (b.year !== a.year) return b.year - a.year;
-      return TERM_ORDER[a.term] - TERM_ORDER[b.term];
+      // 1️⃣ In Progress first, Completed last
+      if (a.status !== b.status) {
+        return a.status === "In Progress" ? -1 : 1;
+      }
+
+      // 2️⃣ Same status → sort by year (newer first)
+      if (b.year !== a.year) {
+        return b.year - a.year;
+      }
+
+      // 3️⃣ Same year → term order
+      return TERM_ORDER[b.term] - TERM_ORDER[a.term];
     });
 
     setSemesters(updated);
     saveSemesters(updated);
   };
+
 
   /* ---------- UI ---------- */
 
