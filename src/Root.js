@@ -1,5 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Screens
 import HomeScreen from "./screens/HomeScreen";
@@ -10,6 +11,7 @@ import SemesterDetailScreen from "./screens/SemesterDetailScreen";
 // // Layout & UI
 // import MainLayout from "./src/layout/MainLayout";
 import BottomTabBar from "./components/BottomTabBar.js";
+const STORAGE_KEY = "SEMESTERS";
 
 export default function Root() {
     const [activeTab, setActiveTab] = useState("home");
@@ -25,8 +27,10 @@ export default function Root() {
                         <SemesterDetailScreen
                             semester={selectedSemester}
                             onBack={() => setSelectedSemester(null)}
+                            onDelete={handleDeleteSemester}
                         />
                     );
+
                 }
                 return (
                     <SemestersScreen
@@ -39,6 +43,29 @@ export default function Root() {
                 return <HomeScreen />;
         }
     };
+    const handleDeleteSemester = async (semesterId) => {
+        try {
+            const stored = await AsyncStorage.getItem(STORAGE_KEY);
+            if (!stored) return;
+
+            const semesters = JSON.parse(stored);
+
+            const updated = semesters.filter(
+                (s) => s.id !== semesterId
+            );
+
+            await AsyncStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(updated)
+            );
+
+            // Detail screen close → list pe wapas
+            setSelectedSemester(null);
+        } catch (e) {
+            console.log("Delete failed", e);
+        }
+    };
+
 
     return (
         <View style={styles.container}>
