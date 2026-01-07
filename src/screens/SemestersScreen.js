@@ -23,7 +23,7 @@ const STORAGE_KEY = "SEMESTERS";
 
 /* ---------- Screen ---------- */
 
-export default function SemestersScreen({ navigation }) {
+export default function SemestersScreen({ onOpenSemester }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
 
   const [semesters, setSemesters] = useState([
@@ -122,12 +122,13 @@ export default function SemestersScreen({ navigation }) {
             status={s.status}
             current={s.current}
             onPress={() =>
-              navigation.navigate("SemesterDetail", {
-                semesterId: s.id,
+              onOpenSemester({
+                id: s.id,
                 term: s.term,
                 year: s.year,
               })
             }
+
           />
         ))}
       </ScrollView>
