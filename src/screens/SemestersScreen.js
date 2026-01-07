@@ -17,7 +17,8 @@ import { Alert } from "react-native";
 const TERM_ORDER = {
   Winter: 1,
   Summer: 2,
-  Fall: 3,
+  Spring: 3,
+  Fall: 4,
 };
 
 const STORAGE_KEY = "SEMESTERS";
@@ -82,37 +83,89 @@ export default function SemestersScreen({ onOpenSemester }) {
   /* ---------- Add Semester ---------- */
 
   const handleAddSemester = (newSemester) => {
-    // 🔒 DUPLICATE CHECK (term + year)
-    const exists = semesters.some(
+    const currentSemester = semesters.find((s) => s.current);
+
+    /* ---------------- Rule 1: No duplicate semester ---------------- */
+    const duplicate = semesters.some(
       (s) =>
         s.term === newSemester.term &&
         s.year === newSemester.year
     );
 
-    if (exists) {
+    if (duplicate) {
       Alert.alert(
         "Semester already exists",
-        `${newSemester.term} ${newSemester.year} has already been created.`
+        `${newSemester.term} ${newSemester.year} already exists.`
       );
       return;
     }
 
+    /* ---------------- Rule 2: Only ONE current semester ---------------- */
+    if (newSemester.current && currentSemester) {
+      Alert.alert(
+        "Current semester already exists",
+        `You already have ${currentSemester.term} ${currentSemester.year} as your current semester.`
+      );
+      return;
+    }
+
+    /* ---------------- Rule 3: Planned semester validation ---------------- */
+    if (newSemester.status === "Planned" && currentSemester) {
+      // Year must be >= current year
+      if (newSemester.year < currentSemester.year) {
+        Alert.alert(
+          "Invalid planned semester",
+          "Planned semesters must be in or after the current semester year."
+        );
+        return;
+      }
+
+      // Same year → term must be AFTER current term
+      if (
+        newSemester.year === currentSemester.year &&
+        TERM_ORDER[newSemester.term] <=
+        TERM_ORDER[currentSemester.term]
+      ) {
+        Alert.alert(
+          "Invalid planned semester",
+          "Planned semester must be after the current semester."
+        );
+        return;
+      }
+    }
+
+    /* ---------------- Add + Sort ---------------- */
     const updated = [...semesters, newSemester];
 
     updated.sort((a, b) => {
-      // 1️⃣ In Progress first, Completed last
+      /* 1️⃣ Current always on top */
+      if (a.current !== b.current) {
+        return a.current ? -1 : 1;
+      }
+
+      /* 2️⃣ Planned before Completed */
       if (a.status !== b.status) {
-        return a.status === "In Progress" ? -1 : 1;
+        if (a.status === "Planned") return -1;
+        if (b.status === "Planned") return 1;
       }
 
-      // 2️⃣ Same status → sort by year (newer first)
-      if (b.year !== a.year) {
-        return b.year - a.year;
+      /* 3️⃣ Same status → year logic */
+      if (a.year !== b.year) {
+        // Planned → nearer future first
+        if (a.status === "Planned") {
+          return a.year - b.year;
+        }
+
+        // Completed → newer first
+        if (a.status === "Completed") {
+          return b.year - a.year;
+        }
       }
 
-      // 3️⃣ Same year → term order
-      return TERM_ORDER[b.term] - TERM_ORDER[a.term];
+      /* 4️⃣ Same year → term order */
+      return TERM_ORDER[a.term] - TERM_ORDER[b.term];
     });
+
 
     setSemesters(updated);
     saveSemesters(updated);
