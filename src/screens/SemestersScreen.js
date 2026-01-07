@@ -11,9 +11,9 @@ import { useState } from "react";
 import NewSemesterSheet from "../components/NewSemesterSheet";
 
 const TERM_ORDER = {
-  Winter: 3,
+  Winter: 1,
   Summer: 2,
-  Fall: 1,
+  Fall: 3,
 };
 
 export default function SemestersScreen({ navigation }) {
@@ -58,6 +58,7 @@ export default function SemestersScreen({ navigation }) {
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!showNewSemester}
       >
         <Text style={styles.header}>Semesters</Text>
 

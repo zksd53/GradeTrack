@@ -8,11 +8,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import { FlatList } from "react-native";
+
 
 export default function NewSemesterSheet({
     visible,
     onClose,
-    onCreate,   // 👈 STEP-1: parent se aaya hua function
+    onCreate,
 }) {
     // TERM
     const [term, setTerm] = useState("Fall");
@@ -46,11 +48,17 @@ export default function NewSemesterSheet({
                         </Pressable>
                     </View>
 
+                    {/* 🔥 MAIN SCROLL */}
+
                     {/* TERM */}
                     <Text style={styles.label}>Term</Text>
                     <Pressable
                         style={styles.input}
-                        onPress={() => setShowTermDropdown(!showTermDropdown)}
+                        onPress={() => {
+                            setShowTermDropdown(!showTermDropdown);
+                            setShowYearDropdown(false);
+                            setShowStatusDropdown(false);
+                        }}
                     >
                         <Text style={styles.value}>{term}</Text>
                         <Ionicons name="chevron-down" size={18} color="#9AA3B2" />
@@ -77,7 +85,11 @@ export default function NewSemesterSheet({
                     <Text style={styles.label}>Year</Text>
                     <Pressable
                         style={styles.input}
-                        onPress={() => setShowYearDropdown(!showYearDropdown)}
+                        onPress={() => {
+                            setShowYearDropdown(!showYearDropdown);
+                            setShowTermDropdown(false);
+                            setShowStatusDropdown(false);
+                        }}
                     >
                         <Text style={styles.value}>{year}</Text>
                         <Ionicons name="chevron-down" size={18} color="#9AA3B2" />
@@ -85,10 +97,12 @@ export default function NewSemesterSheet({
 
                     {showYearDropdown && (
                         <View style={[styles.dropdown, { maxHeight: 180 }]}>
-                            <ScrollView showsVerticalScrollIndicator={false}>
-                                {years.map(item => (
+                            <FlatList
+                                data={years}
+                                keyExtractor={(item) => item.toString()}
+                                showsVerticalScrollIndicator={false}
+                                renderItem={({ item }) => (
                                     <Pressable
-                                        key={item}
                                         style={styles.dropdownItem}
                                         onPress={() => {
                                             setYear(item);
@@ -97,16 +111,21 @@ export default function NewSemesterSheet({
                                     >
                                         <Text style={styles.dropdownText}>{item}</Text>
                                     </Pressable>
-                                ))}
-                            </ScrollView>
+                                )}
+                            />
                         </View>
+
                     )}
 
                     {/* STATUS */}
                     <Text style={styles.label}>Status</Text>
                     <Pressable
                         style={styles.input}
-                        onPress={() => setShowStatusDropdown(!showStatusDropdown)}
+                        onPress={() => {
+                            setShowStatusDropdown(!showStatusDropdown);
+                            setShowTermDropdown(false);
+                            setShowYearDropdown(false);
+                        }}
                     >
                         <Text style={styles.value}>{status}</Text>
                         <Ionicons name="chevron-down" size={18} color="#9AA3B2" />
@@ -129,7 +148,7 @@ export default function NewSemesterSheet({
                         </View>
                     )}
 
-                    {/* CURRENT SEMESTER TOGGLE */}
+                    {/* CURRENT SEMESTER */}
                     <Pressable
                         style={styles.currentRow}
                         onPress={() => setIsCurrent(!isCurrent)}
@@ -156,11 +175,10 @@ export default function NewSemesterSheet({
                         </View>
                     </Pressable>
 
-                    {/* CREATE SEMESTER */}
+                    {/* CREATE */}
                     <Pressable
                         style={styles.createBtn}
                         onPress={() => {
-                            // 👇 STEP-1 ACTUAL USE
                             onCreate({
                                 id: `${term}-${year}`,
                                 term,
@@ -171,12 +189,12 @@ export default function NewSemesterSheet({
                                 credits: "0 credits",
                                 current: isCurrent,
                             });
-
                             onClose();
                         }}
                     >
                         <Text style={styles.createText}>Create Semester</Text>
                     </Pressable>
+
                 </View>
             </View>
         </Modal>
@@ -198,6 +216,7 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 24,
         padding: 20,
         paddingBottom: 32,
+        maxHeight: "90%",
     },
 
     handle: {
@@ -213,7 +232,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 20,
+        marginBottom: 12,
     },
 
     title: {
@@ -322,4 +341,6 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: "#000",
     },
+
+
 });
