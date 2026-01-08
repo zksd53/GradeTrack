@@ -25,150 +25,15 @@ const STORAGE_KEY = "SEMESTERS";
 
 /* ---------- Screen ---------- */
 
-export default function SemestersScreen({ onOpenSemester }) {
+export default function SemestersScreen({ semesters, onOpenSemester, onAddSemester, }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
 
-  const [semesters, setSemesters] = useState([
-    {
-      id: "fall-2024",
-      term: "Fall",
-      year: 2024,
-      status: "In Progress",
-      gpa: "3.20",
-      courses: "3 courses",
-      credits: "10 credits",
-      current: true,
-    },
-    {
-      id: "spring-2024",
-      term: "Spring",
-      year: 2024,
-      status: "Completed",
-      gpa: "3.43",
-      courses: "2 courses",
-      credits: "7 credits",
-    },
-  ]);
 
-  /* ---------- Load from phone memory ---------- */
-
-  const loadSemesters = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSemesters(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.log("Failed to load semesters", e);
-    }
-  };
-
-  useEffect(() => {
-    loadSemesters();
-  }, []);
-
-  /* ---------- Save to phone memory ---------- */
-
-  const saveSemesters = async (data) => {
-    try {
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(data)
-      );
-    } catch (e) {
-      console.log("Failed to save semesters", e);
-    }
-  };
 
   /* ---------- Add Semester ---------- */
 
   const handleAddSemester = (newSemester) => {
-    const currentSemester = semesters.find((s) => s.current);
-
-    /* ---------------- Rule 1: No duplicate semester ---------------- */
-    const duplicate = semesters.some(
-      (s) =>
-        s.term === newSemester.term &&
-        s.year === newSemester.year
-    );
-
-    if (duplicate) {
-      Alert.alert(
-        "Semester already exists",
-        `${newSemester.term} ${newSemester.year} already exists.`
-      );
-      return;
-    }
-
-    /* ---------------- Rule 2: Only ONE current semester ---------------- */
-    if (newSemester.current && currentSemester) {
-      Alert.alert(
-        "Current semester already exists",
-        `You already have ${currentSemester.term} ${currentSemester.year} as your current semester.`
-      );
-      return;
-    }
-
-    /* ---------------- Rule 3: Planned semester validation ---------------- */
-    if (newSemester.status === "Planned" && currentSemester) {
-      // Year must be >= current year
-      if (newSemester.year < currentSemester.year) {
-        Alert.alert(
-          "Invalid planned semester",
-          "Planned semesters must be in or after the current semester year."
-        );
-        return;
-      }
-
-      // Same year → term must be AFTER current term
-      if (
-        newSemester.year === currentSemester.year &&
-        TERM_ORDER[newSemester.term] <=
-        TERM_ORDER[currentSemester.term]
-      ) {
-        Alert.alert(
-          "Invalid planned semester",
-          "Planned semester must be after the current semester."
-        );
-        return;
-      }
-    }
-
-    /* ---------------- Add + Sort ---------------- */
-    const updated = [...semesters, newSemester];
-
-    updated.sort((a, b) => {
-      /* 1️⃣ Current always on top */
-      if (a.current !== b.current) {
-        return a.current ? -1 : 1;
-      }
-
-      /* 2️⃣ Planned before Completed */
-      if (a.status !== b.status) {
-        if (a.status === "Planned") return -1;
-        if (b.status === "Planned") return 1;
-      }
-
-      /* 3️⃣ Same status → year logic */
-      if (a.year !== b.year) {
-        // Planned → nearer future first
-        if (a.status === "Planned") {
-          return a.year - b.year;
-        }
-
-        // Completed → newer first
-        if (a.status === "Completed") {
-          return b.year - a.year;
-        }
-      }
-
-      /* 4️⃣ Same year → term order */
-      return TERM_ORDER[a.term] - TERM_ORDER[b.term];
-    });
-
-
-    setSemesters(updated);
-    saveSemesters(updated);
+    onAddSemester(newSemester);
   };
 
 
@@ -218,6 +83,7 @@ export default function SemestersScreen({ onOpenSemester }) {
         onClose={() => setShowNewSemester(false)}
         onCreate={handleAddSemester}
       />
+
     </SafeAreaView>
   );
 }

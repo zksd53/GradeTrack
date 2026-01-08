@@ -8,19 +8,21 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import NewCourseSheet from "../components/NewCourseSheet";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 
 export default function SemesterDetailScreen({ semester, onBack, onDelete, onAddCourse }) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
-    const [courses, setCourses] = useState(semester.courses || []);
+    // const [courses, setCourses] = useState(semester.courses || []);
+    const courses = semester.courses || [];
+
     const totalCredits = courses.reduce(
         (sum, c) => sum + c.credits,
         0
     );
-    useEffect(() => {
-        setCourses(semester.courses || []);
-    }, [semester]);
+    // useEffect(() => {
+    //     setCourses(semester.courses || []);
+    // }, [semester]);
 
 
     return (
