@@ -7,37 +7,57 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
+
+// Components
 import NewSemesterSheet from "../components/NewSemesterSheet";
-import { Alert } from "react-native";
-
-/* ---------- Constants ---------- */
-
-const TERM_ORDER = {
-  Winter: 1,
-  Summer: 2,
-  Spring: 3,
-  Fall: 4,
-};
-
-const STORAGE_KEY = "SEMESTERS";
+import SemesterDetailScreen from "./SemesterDetailScreen";
 
 /* ---------- Screen ---------- */
 
-export default function SemestersScreen({ semesters, onOpenSemester, onAddSemester, }) {
+export default function SemestersScreen({ semesters, saveSemesters }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
+  const [selectedSemesterId, setSelectedSemesterId] = useState(null);
 
+  const selectedSemester = semesters.find(
+    (s) => s.id === selectedSemesterId
+  );
 
-
-  /* ---------- Add Semester ---------- */
+  /* ---------- Handlers ---------- */
 
   const handleAddSemester = (newSemester) => {
-    onAddSemester(newSemester);
+    saveSemesters([...semesters, newSemester]);
   };
 
+  const handleAddCourse = (semesterId, newCourse) => {
+    const updated = semesters.map((s) =>
+      s.id === semesterId
+        ? { ...s, courses: [...(s.courses || []), newCourse] }
+        : s
+    );
+    saveSemesters(updated);
+  };
 
-  /* ---------- UI ---------- */
+  const handleDeleteSemester = (semesterId) => {
+    const updated = semesters.filter((s) => s.id !== semesterId);
+    saveSemesters(updated);
+    setSelectedSemesterId(null);
+  };
+
+  /* ---------- Detail View ---------- */
+
+  if (selectedSemesterId && selectedSemester) {
+    return (
+      <SemesterDetailScreen
+        semester={selectedSemester}
+        onBack={() => setSelectedSemesterId(null)}
+        onDelete={handleDeleteSemester}
+        onAddCourse={handleAddCourse}
+      />
+    );
+  }
+
+  /* ---------- List View ---------- */
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -66,14 +86,7 @@ export default function SemestersScreen({ semesters, onOpenSemester, onAddSemest
             credits={s.credits}
             status={s.status}
             current={s.current}
-            onPress={() =>
-              onOpenSemester({
-                id: s.id,
-                term: s.term,
-                year: s.year,
-              })
-            }
-
+            onPress={() => setSelectedSemesterId(s.id)}
           />
         ))}
       </ScrollView>
@@ -83,7 +96,6 @@ export default function SemestersScreen({ semesters, onOpenSemester, onAddSemest
         onClose={() => setShowNewSemester(false)}
         onCreate={handleAddSemester}
       />
-
     </SafeAreaView>
   );
 }
@@ -112,7 +124,7 @@ function SemesterCard({
         </View>
 
         <Text style={styles.meta}>
-          {courses} · {credits}
+          {(courses?.length || 0)} courses · {credits}
         </Text>
 
         <StatusBadge text={status} />

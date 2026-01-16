@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+#TASKS that should be done
+1. Number of semesters should be updated in settings
+2. The front page should show should the current semesters.
+3. Add new semester ke baad. Pop up aana chahiye
+4. Popup ke baad a small window then window ke baad vo add hona chahiye. 
