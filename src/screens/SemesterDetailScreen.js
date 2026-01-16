@@ -4,112 +4,124 @@ import {
     StyleSheet,
     Pressable,
     SafeAreaView,
+    ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import NewCourseSheet from "../components/NewCourseSheet";
-// import { useEffect } from "react";
 
-export default function SemesterDetailScreen({ semester, onBack, onDelete, onAddCourse }) {
+export default function SemesterDetailScreen({
+    semester,
+    onBack,
+    onDelete,
+    onAddCourse,
+}) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
-    // const [courses, setCourses] = useState(semester.courses || []);
-    const courses = semester.courses || [];
+
+    // ALWAYS derive from props (single source of truth)
+    const courses = Array.isArray(semester.courses)
+        ? semester.courses
+        : [];
+
 
     const totalCredits = courses.reduce(
-        (sum, c) => sum + c.credits,
+        (sum, c) => sum + (Number(c?.credits) || 0),
         0
     );
-    // useEffect(() => {
-    //     setCourses(semester.courses || []);
-    // }, [semester]);
 
 
     return (
         <SafeAreaView style={styles.safe}>
-            {/* ---------- Header ---------- */}
-            <View style={styles.header}>
-                <Pressable onPress={onBack}>
-                    <Ionicons name="chevron-back" size={24} color="#111827" />
-                </Pressable>
-
-                <View>
-                    <Text style={styles.title}>
-                        {semester.term} {semester.year}
-                    </Text>
-                    <Text style={styles.subtitle}>
-                        {courses.length} course{courses.length !== 1 ? "s" : ""} •{" "}
-                        {totalCredits} credits
-                    </Text>
-                </View>
-
-                {/* Delete button */}
-                <Pressable onPress={() => setShowDelete(true)}>
-                    <Ionicons name="trash-outline" size={22} color="#111827" />
-                </Pressable>
-            </View>
-
-            {/* ---------- GPA Card ---------- */}
-            <View style={styles.gpaCard}>
-                <View style={styles.gpaCircle}>
-                    <Text style={styles.gpaText}>0.00</Text>
-                </View>
-                <Text style={styles.gpaLabel}>Semester GPA</Text>
-                <Text style={styles.creditText}>{totalCredits} credits</Text>
-            </View>
-
-            {/* ---------- Add Course Button ---------- */}
-            <Pressable
-                style={styles.addCourseButton}
-                onPress={() => setShowAddCourse(true)}
+            <ScrollView
+                contentContainerStyle={styles.scroll}
+                showsVerticalScrollIndicator={false}
             >
-                <Ionicons name="add" size={20} color="#FFF" />
-                <Text style={styles.addCourseText}>Add Course</Text>
-            </Pressable>
+                {/* ---------- Header ---------- */}
+                <View style={styles.header}>
+                    <Pressable onPress={onBack}>
+                        <Ionicons name="chevron-back" size={24} color="#111827" />
+                    </Pressable>
 
-
-            {/* ---------- Empty State ---------- */}
-            {courses.length === 0 && (
-                <View style={styles.empty}>
-                    <Text style={styles.book}>📖</Text>
-                    <Text style={styles.emptyTitle}>No courses yet</Text>
-                    <Text style={styles.emptySub}>
-                        Add courses to start tracking your grades for this semester
-                    </Text>
-                </View>
-            )}
-
-
-            {courses.map((course) => (
-                <View key={course.id} style={styles.courseCard}>
-                    <View style={styles.courseLeft}>
-                        <View style={styles.progressCircle}>
-                            <Text style={styles.progressText}>0%</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.courseInfo}>
-                        <Text style={styles.courseTitle}>{course.name}</Text>
-                        <Text style={styles.courseCode}>{course.code}</Text>
-                        <Text style={styles.courseCredits}>
-                            {course.credits} credits
+                    <View style={styles.headerCenter}>
+                        <Text style={styles.title}>
+                            {semester.term} {semester.year}
+                        </Text>
+                        <Text style={styles.subtitle}>
+                            {courses.length} course{courses.length !== 1 ? "s" : ""} •{" "}
+                            {totalCredits} credits
                         </Text>
                     </View>
 
-                    <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                    <Pressable onPress={() => setShowDelete(true)}>
+                        <Ionicons name="trash-outline" size={22} color="#111827" />
+                    </Pressable>
                 </View>
-            ))}
 
+                {/* ---------- GPA Card ---------- */}
+                <View style={styles.gpaCard}>
+                    <View style={styles.gpaCircle}>
+                        <Text style={styles.gpaText}>0.00</Text>
+                    </View>
+                    <Text style={styles.gpaLabel}>Semester GPA</Text>
+                    <Text style={styles.creditText}>{totalCredits} credits</Text>
+                </View>
 
-            {/* ---------- Delete Confirmation Modal ---------- */}
+                {/* ---------- Add Course ---------- */}
+                <Pressable
+                    style={styles.addCourseButton}
+                    onPress={() => setShowAddCourse(true)}
+                >
+                    <Ionicons name="add" size={20} color="#FFF" />
+                    <Text style={styles.addCourseText}>Add Course</Text>
+                </Pressable>
+
+                {/* ---------- Empty State ---------- */}
+                {courses.length === 0 && (
+                    <View style={styles.empty}>
+                        <Text style={styles.book}>📖</Text>
+                        <Text style={styles.emptyTitle}>No courses yet</Text>
+                        <Text style={styles.emptySub}>
+                            Add courses to start tracking your grades for this semester
+                        </Text>
+                    </View>
+                )}
+
+                {/* ---------- Courses List ---------- */}
+                {courses.map((course) => (
+                    <Pressable key={course.id} style={styles.courseCard}>
+                        <View style={styles.courseLeft}>
+                            <View style={styles.progressCircle}>
+                                <Text style={styles.progressText}>0%</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.courseInfo}>
+                            <Text style={styles.courseTitle}>{course.name}</Text>
+                            <Text style={styles.courseCode}>{course.code || "—"}</Text>
+                            <Text style={styles.courseCredits}>
+                                {course.credits} credits
+                            </Text>
+                        </View>
+
+                        <Ionicons
+                            name="chevron-forward"
+                            size={18}
+                            color="#9CA3AF"
+                        />
+                    </Pressable>
+                ))}
+            </ScrollView>
+
+            {/* ---------- Delete Confirmation ---------- */}
             {showDelete && (
                 <View style={styles.overlay}>
                     <View style={styles.modal}>
                         <Text style={styles.modalTitle}>Delete Semester?</Text>
 
                         <Text style={styles.modalText}>
-                            This will permanently delete {semester.term} {semester.year}
-                            and all its courses and assessments. This action cannot be undone.
+                            This will permanently delete {semester.term} {semester.year} and
+                            all its courses. This action cannot be undone.
                         </Text>
 
                         <Pressable
@@ -127,17 +139,14 @@ export default function SemesterDetailScreen({ semester, onBack, onDelete, onAdd
                         </Pressable>
                     </View>
                 </View>
-
             )}
+
+            {/* ---------- New Course Sheet ---------- */}
             <NewCourseSheet
                 visible={showAddCourse}
                 onClose={() => setShowAddCourse(false)}
-                onCreate={(course) => {
-                    onAddCourse(semester.id, course);
-                }}
-
+                onCreate={(course) => onAddCourse(semester.id, course)}
             />
-
         </SafeAreaView>
     );
 }
@@ -148,7 +157,11 @@ const styles = StyleSheet.create({
     safe: {
         flex: 1,
         backgroundColor: "#F7F8FC",
+    },
+
+    scroll: {
         padding: 16,
+        paddingBottom: 40,
     },
 
     header: {
@@ -156,6 +169,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         marginBottom: 24,
+    },
+
+    headerCenter: {
+        alignItems: "center",
     },
 
     title: {
@@ -223,7 +240,7 @@ const styles = StyleSheet.create({
 
     empty: {
         alignItems: "center",
-        marginTop: 20,
+        marginTop: 10,
     },
 
     book: {
@@ -242,6 +259,55 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginTop: 6,
         maxWidth: 260,
+    },
+
+    courseCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFF",
+        borderRadius: 18,
+        padding: 16,
+        marginBottom: 14,
+    },
+
+    courseLeft: {
+        marginRight: 12,
+    },
+
+    progressCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 4,
+        borderColor: "#CBD5E1",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    progressText: {
+        fontSize: 12,
+        fontWeight: "700",
+    },
+
+    courseInfo: {
+        flex: 1,
+    },
+
+    courseTitle: {
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    courseCode: {
+        fontSize: 13,
+        color: "#6B7280",
+        marginTop: 2,
+    },
+
+    courseCredits: {
+        fontSize: 12,
+        color: "#6B7280",
+        marginTop: 2,
     },
 
     overlay: {
@@ -300,53 +366,4 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "600",
     },
-    courseCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#FFF",
-        borderRadius: 18,
-        padding: 16,
-        marginBottom: 14,
-    },
-
-    courseLeft: {
-        marginRight: 12,
-    },
-
-    progressCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        borderWidth: 4,
-        borderColor: "#CBD5E1",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    progressText: {
-        fontSize: 12,
-        fontWeight: "700",
-    },
-
-    courseInfo: {
-        flex: 1,
-    },
-
-    courseTitle: {
-        fontSize: 15,
-        fontWeight: "600",
-    },
-
-    courseCode: {
-        fontSize: 13,
-        color: "#6B7280",
-        marginTop: 2,
-    },
-
-    courseCredits: {
-        fontSize: 12,
-        color: "#6B7280",
-        marginTop: 2,
-    },
-
 });
