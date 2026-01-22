@@ -65,7 +65,16 @@ export default function Root() {
 
     return (
         <View style={styles.container}>
-            {activeTab === "home" && <HomeScreen />}
+            {activeTab === "home" && (
+                <HomeScreen
+                    semesters={semesters}
+                    onOpenCourse={(semesterId, courseId) => {
+                        setActiveTab("semesters");
+                        setSelectedSemesterId(semesterId);
+                        setSelectedCourseId(courseId);
+                    }}
+                />
+            )}
 
             {activeTab === "semesters" && !selectedSemester && (
                 <SemestersScreen
@@ -113,6 +122,7 @@ export default function Root() {
                 <CourseDetailScreen
                     semesterId={selectedSemester.id}
                     course={selectedCourse}
+                    semesterCourses={selectedSemester.courses || []}
                     onBack={() => setSelectedCourseId(null)}
                     onDeleteCourse={(semesterId, courseId) => {
                         saveSemesters((prev) =>

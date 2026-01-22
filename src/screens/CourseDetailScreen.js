@@ -11,10 +11,12 @@ import { useMemo, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import NewAssessmentSheet from "../components/NewAssessmentSheet";
 import EditAssessmentScoreSheet from "../components/EditAssessmentScoreSheet";
+import UpdateAssessmentSheet from "../components/UpdateAssessmentSheet";
 
 export default function CourseDetailScreen({
     semesterId,
     course,
+    semesterCourses,
     onBack,
     onDeleteCourse,
     onAddAssessment,
@@ -23,6 +25,7 @@ export default function CourseDetailScreen({
     const [showAddAssessment, setShowAddAssessment] = useState(false);
     const [editingAssessment, setEditingAssessment] = useState(null);
     const [showEditScore, setShowEditScore] = useState(false);
+    const [showUpdateAssessment, setShowUpdateAssessment] = useState(false);
     const [circleMode, setCircleMode] = useState("progress");
     const rotation = useRef(new Animated.Value(0)).current;
     const rotationStep = useRef(0);
@@ -154,7 +157,9 @@ export default function CourseDetailScreen({
                         <Text style={styles.subtitle}>{course.code || "—"}</Text>
                     </View>
 
-                    <Ionicons name="create-outline" size={20} color="#111827" />
+                    <Pressable onPress={() => setShowUpdateAssessment(true)}>
+                        <Text style={styles.updateText}>Update Assessment</Text>
+                    </Pressable>
                 </View>
 
                 <View style={styles.summaryCard}>
@@ -289,6 +294,16 @@ export default function CourseDetailScreen({
                 }}
                 onSave={handleSaveScore}
             />
+            <UpdateAssessmentSheet
+                visible={showUpdateAssessment}
+                onClose={() => setShowUpdateAssessment(false)}
+                courses={semesterCourses}
+                onSave={(courseId, assessmentId, score) =>
+                    onUpdateAssessment(semesterId, courseId, assessmentId, {
+                        score,
+                    })
+                }
+            />
         </SafeAreaView>
     );
 }
@@ -305,6 +320,7 @@ const styles = StyleSheet.create({
     headerText: { flex: 1, marginLeft: 12 },
     title: { fontSize: 20, fontWeight: "700" },
     subtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+    updateText: { fontSize: 12, fontWeight: "600", color: "#2563EB" },
 
     summaryCard: {
         backgroundColor: "#FFF",
