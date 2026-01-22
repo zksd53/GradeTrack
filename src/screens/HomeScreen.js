@@ -1,5 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import UpdateAssessmentSheet from "../components/UpdateAssessmentSheet";
 
 const gradeScale = [
   { min: 90, letter: "A", gpa: 4.0 },
@@ -102,10 +104,27 @@ const getCumulativeGpa = (semesters) => {
 };
 
 const getGradeColor = (percent) => {
-  if (percent === null) return "#AAB1C5";
-  if (percent >= 85) return "#4ADE80";
+  if (percent === null) return "#9CA3AF";
+  if (percent >= 85) return "#22C55E";
   if (percent >= 70) return "#F59E0B";
   return "#EF4444";
+};
+
+const getCourseProgress = (course) => {
+  const assessments = Array.isArray(course.assessments)
+    ? course.assessments
+    : [];
+  const totalWeight = assessments.reduce(
+    (sum, a) => sum + (Number(a.weight) || 0),
+    0
+  );
+  const completedWeight = assessments.reduce(
+    (sum, a) =>
+      sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+    0
+  );
+  if (totalWeight === 0) return 0;
+  return Math.min(100, (completedWeight / totalWeight) * 100);
 };
 
 const getCurrentSemester = (semesters) => {
@@ -117,7 +136,11 @@ const getCurrentSemester = (semesters) => {
     .sort((a, b) => (b.year || 0) - (a.year || 0))[0];
 };
 
-export default function HomeScreen({ semesters = [], onOpenCourse }) {
+export default function HomeScreen({
+  semesters = [],
+  onOpenCourse,
+  onUpdateAssessment,
+}) {
   const currentSemester = getCurrentSemester(semesters);
   const currentStats = currentSemester
     ? getSemesterStats(currentSemester)
@@ -126,6 +149,12 @@ export default function HomeScreen({ semesters = [], onOpenCourse }) {
   const currentCourses = Array.isArray(currentSemester?.courses)
     ? currentSemester.courses
     : [];
+  const [showUpdateAssessment, setShowUpdateAssessment] = useState(false);
+  const activeCourses = currentCourses.length;
+  const creditsThisTerm = currentStats.credits;
+  const cumulativeRing = cumulativeGpa === null ? 0 : (cumulativeGpa / 4) * 100;
+  const semesterRing =
+    currentStats.semesterGpa === null ? 0 : (currentStats.semesterGpa / 4) * 100;
 
   return (
     <ScrollView
@@ -133,9 +162,19 @@ export default function HomeScreen({ semesters = [], onOpenCourse }) {
       contentContainerStyle={{ paddingBottom: 120 }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <Ionicons name="school-outline" size={20} color="#FFF" />
+      <View style={styles.hero}>
+        <View style={styles.heroTop}>
+          <View style={styles.brandRow}>
+            <Ionicons name="school-outline" size={16} color="#E0E7FF" />
+            <Text style={styles.brandText}>GradeTrack</Text>
+          </View>
+          <Pressable
+            style={styles.updateButton}
+            onPress={() => setShowUpdateAssessment(true)}
+          >
+            <Text style={styles.updateButtonText}>Update Assessment</Text>
+          </Pressable>
+        </View>
         <Text style={styles.welcome}>Welcome back! 👋</Text>
         <Text style={styles.semester}>
           {currentSemester
@@ -144,30 +183,49 @@ export default function HomeScreen({ semesters = [], onOpenCourse }) {
         </Text>
       </View>
 
-      {/* Cumulative GPA */}
-      <View style={styles.gpaCard}>
-        <Text style={styles.gpaValue}>
-          {cumulativeGpa === null ? "0.00" : cumulativeGpa.toFixed(2)}
-        </Text>
-        <Text style={styles.gpaLabel}>Cumulative GPA</Text>
-      </View>
-
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <Stat
+      <View style={styles.ringRow}>
+        <RingCard
+          value={cumulativeGpa === null ? "0.00" : cumulativeGpa.toFixed(2)}
+          label="Cumulative"
+          progress={cumulativeRing}
+        />
+        <RingCard
           value={
             currentStats.semesterGpa === null
               ? "0.00"
               : currentStats.semesterGpa.toFixed(2)
           }
-          label="Semester GPA"
+          label={
+            currentSemester
+              ? `${currentSemester.term} ${currentSemester.year}`
+              : "Semester"
+          }
+          progress={semesterRing}
         />
-        <Stat value={String(currentStats.credits)} label="Credits" />
-        <Stat value={String(currentStats.courseCount)} label="Courses" />
       </View>
 
-      {/* Current Courses */}
-      <Text style={styles.sectionTitle}>Current Courses</Text>
+      <View style={styles.miniRow}>
+        <MiniStat
+          icon="book-outline"
+          iconColor="#4F46E5"
+          value={String(creditsThisTerm)}
+          label="this term"
+        />
+        <MiniStat
+          icon="radio-button-on"
+          iconColor="#10B981"
+          value={String(activeCourses)}
+          label="Active"
+        />
+      </View>
+
+      <View style={styles.sectionRow}>
+        <Text style={styles.sectionTitle}>Current Courses</Text>
+        <Pressable style={styles.viewAll}>
+          <Text style={styles.viewAllText}>View All</Text>
+          <Ionicons name="chevron-forward" size={16} color="#6366F1" />
+        </Pressable>
+      </View>
 
       {currentCourses.length === 0 && (
         <Text style={styles.emptyText}>No courses yet</Text>
@@ -186,6 +244,8 @@ export default function HomeScreen({ semesters = [], onOpenCourse }) {
             code={course.code || "—"}
             grade={gradeText}
             gradeColor={getGradeColor(percent)}
+            progress={getCourseProgress(course)}
+            credits={course.credits}
             onPress={() => {
               if (currentSemester && onOpenCourse) {
                 onOpenCourse(currentSemester.id, course.id);
@@ -194,135 +254,353 @@ export default function HomeScreen({ semesters = [], onOpenCourse }) {
           />
         );
       })}
+
+      <UpdateAssessmentSheet
+        visible={showUpdateAssessment}
+        onClose={() => setShowUpdateAssessment(false)}
+        courses={currentCourses}
+        onSave={(courseId, assessmentId, score) => {
+          if (!currentSemester || !onUpdateAssessment) return;
+          onUpdateAssessment(currentSemester.id, courseId, assessmentId, {
+            score,
+          });
+        }}
+      />
     </ScrollView>
   );
 }
 
-/* ---------- Small Components ---------- */
-
-function Stat({ value, label }) {
+function RingCard({ value, label, progress }) {
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={styles.ringCard}>
+      <ProgressRing value={value} progress={progress} />
+      <Text style={styles.ringLabel}>{label}</Text>
     </View>
   );
 }
 
-function CourseCard({ title, code, grade, gradeColor, onPress }) {
+function MiniStat({ icon, iconColor, value, label }) {
+  return (
+    <View style={styles.miniCard}>
+      <View style={styles.miniIconWrap}>
+        <Ionicons name={icon} size={18} color={iconColor} />
+      </View>
+      <View>
+        <Text style={styles.miniValue}>{value}</Text>
+        <Text style={styles.miniLabel}>{label}</Text>
+      </View>
+    </View>
+  );
+}
+
+function CourseCard({
+  title,
+  code,
+  grade,
+  gradeColor,
+  progress,
+  credits,
+  onPress,
+}) {
+  const accentColors = ["#EC4899", "#F97316", "#8B5CF6", "#6366F1"];
+  const accent = accentColors[Math.abs(title.length) % accentColors.length];
   return (
     <Pressable style={styles.courseCard} onPress={onPress}>
-      <View>
+      <View style={[styles.courseAccent, { borderColor: accent }]} />
+      <View style={styles.courseLeft}>
+        <ProgressRing value={`${Math.round(progress)}%`} progress={progress} />
+      </View>
+      <View style={styles.courseBody}>
         <Text style={styles.courseTitle}>{title}</Text>
         <Text style={styles.courseCode}>{code}</Text>
+        <View style={styles.courseMeta}>
+          <Ionicons name="time-outline" size={12} color="#94A3B8" />
+          <Text style={styles.courseMetaText}>{credits || 0} credits</Text>
+          {grade !== "No grades yet" && (
+            <View style={styles.gradePill}>
+              <Text style={[styles.gradePillText, { color: gradeColor }]}>
+                {grade}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
-
-      <Text style={[styles.grade, gradeColor ? { color: gradeColor } : null]}>
-        {grade}
-      </Text>
+      <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
     </Pressable>
   );
 }
 
-/* ---------- Styles ---------- */
+function ProgressRing({ value, progress }) {
+  const progressAngle = Math.min(360, Math.max(0, progress * 3.6));
+  const rightRotation = progressAngle <= 180 ? progressAngle : 180;
+  const leftRotation = progressAngle > 180 ? progressAngle - 180 : 0;
+  return (
+    <View style={styles.ring}>
+      <View style={styles.ringHalf}>
+        <View
+          style={[
+            styles.ringCircle,
+            styles.ringRight,
+            { transform: [{ rotate: `${rightRotation}deg` }] },
+          ]}
+        />
+      </View>
+      <View style={styles.ringHalf}>
+        <View
+          style={[
+            styles.ringCircle,
+            styles.ringLeft,
+            { transform: [{ rotate: `${leftRotation}deg` }] },
+          ]}
+        />
+      </View>
+      <View style={styles.ringInner}>
+        <Text style={styles.ringValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f5f5f5ff",
-    padding: 16,
+    backgroundColor: "#F5F6FB",
   },
 
-  header: {
-    marginBottom: 20,
+  hero: {
+    backgroundColor: "#5B3FE4",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    padding: 20,
+    paddingTop: 24,
+  },
+  heroTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  brandText: {
+    color: "#E0E7FF",
+    fontSize: 13,
+    fontWeight: "600",
   },
   welcome: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "700",
-    color: "#000000ff",
-    marginTop: 8,
+    color: "#FFF",
   },
   semester: {
     fontSize: 14,
-    color: "#AAB1C5",
+    color: "#D6D1FF",
     marginTop: 4,
   },
-
-  gpaCard: {
-    backgroundColor: "#1C2436",
-    borderRadius: 20,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 20,
+  updateButton: {
+    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
   },
-  gpaValue: {
-    fontSize: 40,
-    fontWeight: "800",
+  updateButtonText: {
     color: "#FFF",
-  },
-  gpaLabel: {
-    fontSize: 14,
-    color: "#AAB1C5",
-    marginTop: 4,
+    fontSize: 11,
+    fontWeight: "600",
   },
 
-  statsRow: {
+  ringRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    paddingHorizontal: 16,
+    marginTop: -40,
   },
-  stat: {
+  ringCard: {
     flex: 1,
-    backgroundColor: "#1C2436",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: "#FFF",
+    borderRadius: 18,
+    paddingVertical: 16,
     alignItems: "center",
-    marginHorizontal: 4,
+    marginHorizontal: 6,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#FFF",
-  },
-  statLabel: {
+  ringLabel: {
     fontSize: 12,
-    color: "#AAB1C5",
-    marginTop: 4,
+    color: "#64748B",
+    marginTop: 10,
+    fontWeight: "600",
   },
 
+  miniRow: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    gap: 12,
+  },
+  miniCard: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  miniIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#EEF2FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  miniValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  miniLabel: {
+    fontSize: 12,
+    color: "#64748B",
+    marginTop: 2,
+  },
+
+  sectionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#FFF",
-    marginBottom: 12,
+    color: "#0F172A",
   },
+  viewAll: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  viewAllText: { fontSize: 13, color: "#6366F1", fontWeight: "600" },
   emptyText: {
     fontSize: 13,
     color: "#6B7280",
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
 
   courseCard: {
-    backgroundColor: "#1C2436",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: "#FFF",
+    borderRadius: 18,
+    padding: 14,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
+    marginHorizontal: 16,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  courseAccent: {
+    width: 6,
+    height: "100%",
+    borderRadius: 6,
+    borderWidth: 3,
+    marginRight: 12,
+  },
+  courseLeft: {
+    marginRight: 12,
+  },
+  courseBody: {
+    flex: 1,
   },
   courseTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#FFF",
+    color: "#0F172A",
   },
   courseCode: {
     fontSize: 12,
-    color: "#AAB1C5",
+    color: "#94A3B8",
     marginTop: 2,
   },
-  grade: {
-    fontSize: 14,
+  courseMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 6,
+  },
+  courseMetaText: {
+    fontSize: 12,
+    color: "#94A3B8",
+  },
+  gradePill: {
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 4,
+  },
+  gradePillText: {
+    fontSize: 11,
     fontWeight: "600",
-    color: "#4ADE80",
+  },
+
+  ring: {
+    width: 56,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  ringHalf: {
+    position: "absolute",
+    width: 56,
+    height: 56,
+    overflow: "hidden",
+  },
+  ringCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 6,
+    borderColor: "#F59E0B",
+  },
+  ringRight: {
+    position: "absolute",
+    right: 0,
+    borderLeftColor: "#E2E8F0",
+    borderBottomColor: "#E2E8F0",
+  },
+  ringLeft: {
+    position: "absolute",
+    left: 0,
+    borderRightColor: "#E2E8F0",
+    borderTopColor: "#E2E8F0",
+  },
+  ringInner: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringValue: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#0F172A",
   },
 });

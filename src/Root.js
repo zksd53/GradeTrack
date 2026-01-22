@@ -73,6 +73,36 @@ export default function Root() {
                         setSelectedSemesterId(semesterId);
                         setSelectedCourseId(courseId);
                     }}
+                    onUpdateAssessment={(
+                        semesterId,
+                        courseId,
+                        assessmentId,
+                        updates
+                    ) => {
+                        saveSemesters((prev) =>
+                            prev.map((s) =>
+                                s.id === semesterId
+                                    ? {
+                                        ...s,
+                                        courses: (s.courses || []).map((c) =>
+                                            c.id === courseId
+                                                ? {
+                                                    ...c,
+                                                    assessments: (
+                                                        c.assessments || []
+                                                    ).map((a) =>
+                                                        a.id === assessmentId
+                                                            ? { ...a, ...updates }
+                                                            : a
+                                                    ),
+                                                }
+                                                : c
+                                        ),
+                                    }
+                                    : s
+                            )
+                        );
+                    }}
                 />
             )}
 
