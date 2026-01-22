@@ -1,6 +1,7 @@
-import { View, StyleSheet } from "react-native";
-import { useState, useEffect } from "react";
+import { View, StyleSheet, Animated } from "react-native";
+import { useState, useEffect, useMemo, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ThemeContext, themes } from "./theme";
 
 // Screens
 import HomeScreen from "./screens/HomeScreen";
@@ -13,12 +14,14 @@ import CourseDetailScreen from "./screens/CourseDetailScreen";
 import BottomTabBar from "./components/BottomTabBar";
 
 const STORAGE_KEY = "SEMESTERS";
+const THEME_KEY = "DARK_MODE";
 
 export default function Root() {
     const [activeTab, setActiveTab] = useState("home");
     const [semesters, setSemesters] = useState([]);
     const [selectedSemesterId, setSelectedSemesterId] = useState(null);
     const [selectedCourseId, setSelectedCourseId] = useState(null);
+    const [darkMode, setDarkMode] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -35,9 +38,17 @@ export default function Root() {
                     : [];
                 setSemesters(normalized);
             }
+            const storedTheme = await AsyncStorage.getItem(THEME_KEY);
+            if (storedTheme !== null) {
+                setDarkMode(storedTheme === "true");
+            }
         };
         load();
     }, []);
+
+    useEffect(() => {
+        AsyncStorage.setItem(THEME_KEY, darkMode ? "true" : "false");
+    }, [darkMode]);
 
     // ✅ SAFE state update
     const saveSemesters = async (updater) => {
@@ -57,182 +68,238 @@ export default function Root() {
             ? selectedSemester.courses.find((c) => c.id === selectedCourseId)
             : null;
 
+    const theme = useMemo(
+        () => (darkMode ? themes.dark : themes.light),
+        [darkMode]
+    );
+
     useEffect(() => {
         if (selectedCourseId && !selectedCourse) {
             setSelectedCourseId(null);
         }
     }, [selectedCourseId, selectedCourse]);
 
+    const transition = useRef(new Animated.Value(0)).current;
+    const currentScreenKey = useMemo(() => {
+        if (activeTab === "home") return "home";
+        if (activeTab === "settings") return "settings";
+        if (activeTab === "semesters") {
+            if (selectedCourse) return `course-${selectedCourse.id}`;
+            if (selectedSemester) return `semester-${selectedSemester.id}`;
+            return "semesters-list";
+        }
+        return "home";
+    }, [activeTab, selectedCourse, selectedSemester]);
+
+    useEffect(() => {
+        transition.setValue(0);
+        Animated.timing(transition, {
+            toValue: 1,
+            duration: 220,
+            useNativeDriver: true,
+        }).start();
+    }, [currentScreenKey, transition]);
+
     return (
-        <View style={styles.container}>
-            {activeTab === "home" && (
-                <HomeScreen
-                    semesters={semesters}
-                    onOpenCourse={(semesterId, courseId) => {
-                        setActiveTab("semesters");
-                        setSelectedSemesterId(semesterId);
-                        setSelectedCourseId(courseId);
+        <ThemeContext.Provider value={{ darkMode, setDarkMode, theme }}>
+            <View style={[styles.container, { backgroundColor: theme.background }]}>
+                <Animated.View
+                    key={currentScreenKey}
+                    style={{
+                        flex: 1,
+                        opacity: transition,
+                        transform: [
+                            {
+                                translateY: transition.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [12, 0],
+                                }),
+                            },
+                        ],
                     }}
-                    onUpdateAssessment={(
-                        semesterId,
-                        courseId,
-                        assessmentId,
-                        updates
-                    ) => {
-                        saveSemesters((prev) =>
-                            prev.map((s) =>
-                                s.id === semesterId
-                                    ? {
-                                        ...s,
-                                        courses: (s.courses || []).map((c) =>
-                                            c.id === courseId
+                >
+                    {activeTab === "home" && (
+                        <HomeScreen
+                            semesters={semesters}
+                            onOpenCourse={(semesterId, courseId) => {
+                                setActiveTab("semesters");
+                                setSelectedSemesterId(semesterId);
+                                setSelectedCourseId(courseId);
+                            }}
+                            onUpdateAssessment={(
+                                semesterId,
+                                courseId,
+                                assessmentId,
+                                updates
+                            ) => {
+                                saveSemesters((prev) =>
+                                    prev.map((s) =>
+                                        s.id === semesterId
+                                            ? {
+                                                ...s,
+                                                courses: (s.courses || []).map((c) =>
+                                                    c.id === courseId
+                                                        ? {
+                                                            ...c,
+                                                            assessments: (
+                                                                c.assessments || []
+                                                            ).map((a) =>
+                                                                a.id === assessmentId
+                                                                    ? { ...a, ...updates }
+                                                                    : a
+                                                            ),
+                                                        }
+                                                        : c
+                                                ),
+                                            }
+                                            : s
+                                    )
+                                );
+                            }}
+                        />
+                    )}
+
+                    {activeTab === "semesters" && !selectedSemester && (
+                        <SemestersScreen
+                            semesters={semesters}
+                            saveSemesters={saveSemesters}
+                            onOpenSemester={(id) => {
+                                setSelectedSemesterId(id);
+                                setSelectedCourseId(null);
+                            }}
+                        />
+                    )}
+
+                    {activeTab === "semesters" &&
+                        selectedSemester &&
+                        !selectedCourse && (
+                            <SemesterDetailScreen
+                                key={selectedSemester.id}
+                                semester={selectedSemester}
+                                onBack={() => {
+                                    setSelectedSemesterId(null);
+                                    setSelectedCourseId(null);
+                                }}
+                                onDelete={(id) => {
+                                    saveSemesters((prev) =>
+                                        prev.filter((s) => s.id !== id)
+                                    );
+                                    setSelectedSemesterId(null);
+                                }}
+                                onAddCourse={(semesterId, course) => {
+                                    saveSemesters((prev) =>
+                                        prev.map((s) =>
+                                            s.id === semesterId
                                                 ? {
-                                                    ...c,
-                                                    assessments: (
-                                                        c.assessments || []
-                                                    ).map((a) =>
-                                                        a.id === assessmentId
-                                                            ? { ...a, ...updates }
-                                                            : a
-                                                    ),
-                                                }
-                                                : c
-                                        ),
-                                    }
-                                    : s
-                            )
-                        );
-                    }}
-                />
-            )}
-
-            {activeTab === "semesters" && !selectedSemester && (
-                <SemestersScreen
-                    semesters={semesters}
-                    saveSemesters={saveSemesters}
-                    onOpenSemester={(id) => {
-                        setSelectedSemesterId(id);
-                        setSelectedCourseId(null);
-                    }}
-                />
-            )}
-
-            {activeTab === "semesters" && selectedSemester && !selectedCourse && (
-                <SemesterDetailScreen
-                    key={selectedSemester.id}
-                    semester={selectedSemester}
-                    onBack={() => {
-                        setSelectedSemesterId(null);
-                        setSelectedCourseId(null);
-                    }}
-                    onDelete={(id) => {
-                        saveSemesters((prev) => prev.filter((s) => s.id !== id));
-                        setSelectedSemesterId(null);
-                    }}
-                    onAddCourse={(semesterId, course) => {
-                        saveSemesters((prev) =>
-                            prev.map((s) =>
-                                s.id === semesterId
-                                    ? {
-                                        ...s,
-                                        courses: [
-                                            ...(Array.isArray(s.courses) ? s.courses : []),
-                                            course,
-                                        ],
-                                    }
-                                    : s
-                            )
-                        );
-                    }}
-                    onOpenCourse={(courseId) => setSelectedCourseId(courseId)}
-                />
-            )}
-
-            {activeTab === "semesters" && selectedSemester && selectedCourse && (
-                <CourseDetailScreen
-                    semesterId={selectedSemester.id}
-                    course={selectedCourse}
-                    semesterCourses={selectedSemester.courses || []}
-                    onBack={() => setSelectedCourseId(null)}
-                    onDeleteCourse={(semesterId, courseId) => {
-                        saveSemesters((prev) =>
-                            prev.map((s) =>
-                                s.id === semesterId
-                                    ? {
-                                        ...s,
-                                        courses: (s.courses || []).filter(
-                                            (c) => c.id !== courseId
-                                        ),
-                                    }
-                                    : s
-                            )
-                        );
-                        setSelectedCourseId(null);
-                    }}
-                    onAddAssessment={(semesterId, courseId, assessment) => {
-                        saveSemesters((prev) =>
-                            prev.map((s) =>
-                                s.id === semesterId
-                                    ? {
-                                        ...s,
-                                        courses: (s.courses || []).map((c) =>
-                                            c.id === courseId
-                                                ? {
-                                                    ...c,
-                                                    assessments: [
-                                                        ...(Array.isArray(c.assessments)
-                                                            ? c.assessments
+                                                    ...s,
+                                                    courses: [
+                                                        ...(Array.isArray(s.courses)
+                                                            ? s.courses
                                                             : []),
-                                                        assessment,
+                                                        course,
                                                     ],
                                                 }
-                                                : c
-                                        ),
-                                    }
-                                    : s
-                            )
-                        );
-                    }}
-                    onUpdateAssessment={(
-                        semesterId,
-                        courseId,
-                        assessmentId,
-                        updates
-                    ) => {
-                        saveSemesters((prev) =>
-                            prev.map((s) =>
-                                s.id === semesterId
-                                    ? {
-                                        ...s,
-                                        courses: (s.courses || []).map((c) =>
-                                            c.id === courseId
-                                                ? {
-                                                    ...c,
-                                                    assessments: (
-                                                        c.assessments || []
-                                                    ).map((a) =>
-                                                        a.id === assessmentId
-                                                            ? { ...a, ...updates }
-                                                            : a
-                                                    ),
-                                                }
-                                                : c
-                                        ),
-                                    }
-                                    : s
-                            )
-                        );
-                    }}
-                />
-            )}
+                                                : s
+                                        )
+                                    );
+                                }}
+                                onOpenCourse={(courseId) =>
+                                    setSelectedCourseId(courseId)
+                                }
+                            />
+                        )}
 
-            {activeTab === "settings" && <SettingsScreen />}
+                    {activeTab === "semesters" && selectedSemester && selectedCourse && (
+                        <CourseDetailScreen
+                            semesterId={selectedSemester.id}
+                            course={selectedCourse}
+                            semesterCourses={selectedSemester.courses || []}
+                            onBack={() => setSelectedCourseId(null)}
+                            onDeleteCourse={(semesterId, courseId) => {
+                                saveSemesters((prev) =>
+                                    prev.map((s) =>
+                                        s.id === semesterId
+                                            ? {
+                                                ...s,
+                                                courses: (s.courses || []).filter(
+                                                    (c) => c.id !== courseId
+                                                ),
+                                            }
+                                            : s
+                                    )
+                                );
+                                setSelectedCourseId(null);
+                            }}
+                            onAddAssessment={(semesterId, courseId, assessment) => {
+                                saveSemesters((prev) =>
+                                    prev.map((s) =>
+                                        s.id === semesterId
+                                            ? {
+                                                ...s,
+                                                courses: (s.courses || []).map((c) =>
+                                                    c.id === courseId
+                                                        ? {
+                                                            ...c,
+                                                            assessments: [
+                                                                ...(Array.isArray(
+                                                                    c.assessments
+                                                                )
+                                                                    ? c.assessments
+                                                                    : []),
+                                                                assessment,
+                                                            ],
+                                                        }
+                                                        : c
+                                                ),
+                                            }
+                                            : s
+                                    )
+                                );
+                            }}
+                            onUpdateAssessment={(
+                                semesterId,
+                                courseId,
+                                assessmentId,
+                                updates
+                            ) => {
+                                saveSemesters((prev) =>
+                                    prev.map((s) =>
+                                        s.id === semesterId
+                                            ? {
+                                                ...s,
+                                                courses: (s.courses || []).map((c) =>
+                                                    c.id === courseId
+                                                        ? {
+                                                            ...c,
+                                                            assessments: (
+                                                                c.assessments || []
+                                                            ).map((a) =>
+                                                                a.id === assessmentId
+                                                                    ? { ...a, ...updates }
+                                                                    : a
+                                                            ),
+                                                        }
+                                                        : c
+                                                ),
+                                            }
+                                            : s
+                                    )
+                                );
+                            }}
+                        />
+                    )}
+
+                    {activeTab === "settings" && (
+                        <SettingsScreen semesters={semesters} />
+                    )}
+                </Animated.View>
 
             <BottomTabBar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
             />
-        </View>
+            </View>
+        </ThemeContext.Provider>
     );
 }
 

@@ -7,8 +7,9 @@ import {
     ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import NewCourseSheet from "../components/NewCourseSheet";
+import { ThemeContext } from "../theme";
 
 export default function SemesterDetailScreen({
     semester,
@@ -19,6 +20,7 @@ export default function SemesterDetailScreen({
 }) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
+    const { theme } = useContext(ThemeContext);
 
     // ALWAYS derive from props (single source of truth)
     const courses = Array.isArray(semester.courses)
@@ -33,7 +35,7 @@ export default function SemesterDetailScreen({
 
 
     return (
-        <SafeAreaView style={styles.safe}>
+        <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
             <ScrollView
                 contentContainerStyle={styles.scroll}
                 showsVerticalScrollIndicator={false}
@@ -41,36 +43,40 @@ export default function SemesterDetailScreen({
                 {/* ---------- Header ---------- */}
                 <View style={styles.header}>
                     <Pressable onPress={onBack}>
-                        <Ionicons name="chevron-back" size={24} color="#111827" />
+                        <Ionicons name="chevron-back" size={24} color={theme.text} />
                     </Pressable>
 
                     <View style={styles.headerCenter}>
-                        <Text style={styles.title}>
+                        <Text style={[styles.title, { color: theme.text }]}>
                             {semester.term} {semester.year}
                         </Text>
-                        <Text style={styles.subtitle}>
+                        <Text style={[styles.subtitle, { color: theme.muted }]}>
                             {courses.length} course{courses.length !== 1 ? "s" : ""} •{" "}
                             {totalCredits} credits
                         </Text>
                     </View>
 
                     <Pressable onPress={() => setShowDelete(true)}>
-                        <Ionicons name="trash-outline" size={22} color="#111827" />
+                        <Ionicons name="trash-outline" size={22} color={theme.text} />
                     </Pressable>
                 </View>
 
                 {/* ---------- GPA Card ---------- */}
-                <View style={styles.gpaCard}>
-                    <View style={styles.gpaCircle}>
-                        <Text style={styles.gpaText}>0.00</Text>
+                <View style={[styles.gpaCard, { backgroundColor: theme.card }]}>
+                    <View style={[styles.gpaCircle, { borderColor: theme.border }]}>
+                        <Text style={[styles.gpaText, { color: theme.text }]}>0.00</Text>
                     </View>
-                    <Text style={styles.gpaLabel}>Semester GPA</Text>
-                    <Text style={styles.creditText}>{totalCredits} credits</Text>
+                    <Text style={[styles.gpaLabel, { color: theme.muted }]}>
+                        Semester GPA
+                    </Text>
+                    <Text style={[styles.creditText, { color: theme.muted }]}>
+                        {totalCredits} credits
+                    </Text>
                 </View>
 
                 {/* ---------- Add Course ---------- */}
                 <Pressable
-                    style={styles.addCourseButton}
+                    style={[styles.addCourseButton, { backgroundColor: theme.accent }]}
                     onPress={() => setShowAddCourse(true)}
                 >
                     <Ionicons name="add" size={20} color="#FFF" />
@@ -81,8 +87,10 @@ export default function SemesterDetailScreen({
                 {courses.length === 0 && (
                     <View style={styles.empty}>
                         <Text style={styles.book}>📖</Text>
-                        <Text style={styles.emptyTitle}>No courses yet</Text>
-                        <Text style={styles.emptySub}>
+                        <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                            No courses yet
+                        </Text>
+                        <Text style={[styles.emptySub, { color: theme.muted }]}>
                             Add courses to start tracking your grades for this semester
                         </Text>
                     </View>
@@ -92,19 +100,25 @@ export default function SemesterDetailScreen({
                 {courses.map((course) => (
                     <Pressable
                         key={course.id}
-                        style={styles.courseCard}
+                        style={[styles.courseCard, { backgroundColor: theme.card }]}
                         onPress={() => onOpenCourse(course.id)}
                     >
                         <View style={styles.courseLeft}>
-                            <View style={styles.progressCircle}>
-                                <Text style={styles.progressText}>0%</Text>
+                            <View style={[styles.progressCircle, { borderColor: theme.border }]}>
+                                <Text style={[styles.progressText, { color: theme.text }]}>
+                                    0%
+                                </Text>
                             </View>
                         </View>
 
                         <View style={styles.courseInfo}>
-                            <Text style={styles.courseTitle}>{course.name}</Text>
-                            <Text style={styles.courseCode}>{course.code || "—"}</Text>
-                            <Text style={styles.courseCredits}>
+                            <Text style={[styles.courseTitle, { color: theme.text }]}>
+                                {course.name}
+                            </Text>
+                            <Text style={[styles.courseCode, { color: theme.muted }]}>
+                                {course.code || "—"}
+                            </Text>
+                            <Text style={[styles.courseCredits, { color: theme.muted }]}>
                                 {course.credits} credits
                             </Text>
                         </View>
@@ -112,7 +126,7 @@ export default function SemesterDetailScreen({
                         <Ionicons
                             name="chevron-forward"
                             size={18}
-                            color="#9CA3AF"
+                            color={theme.muted}
                         />
                     </Pressable>
                 ))}

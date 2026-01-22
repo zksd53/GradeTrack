@@ -7,11 +7,12 @@ import {
     ScrollView,
     Animated,
 } from "react-native";
-import { useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import NewAssessmentSheet from "../components/NewAssessmentSheet";
 import EditAssessmentScoreSheet from "../components/EditAssessmentScoreSheet";
 import UpdateAssessmentSheet from "../components/UpdateAssessmentSheet";
+import { ThemeContext } from "../theme";
 
 export default function CourseDetailScreen({
     semesterId,
@@ -26,6 +27,7 @@ export default function CourseDetailScreen({
     const [editingAssessment, setEditingAssessment] = useState(null);
     const [showEditScore, setShowEditScore] = useState(false);
     const [showUpdateAssessment, setShowUpdateAssessment] = useState(false);
+    const { theme } = useContext(ThemeContext);
     const [circleMode, setCircleMode] = useState("progress");
     const rotation = useRef(new Animated.Value(0)).current;
     const rotationStep = useRef(0);
@@ -142,34 +144,38 @@ export default function CourseDetailScreen({
     const showCurrentGrade = metrics.currentPercent !== null;
 
     return (
-        <SafeAreaView style={styles.safe}>
+        <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
             <ScrollView
                 contentContainerStyle={styles.scroll}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.header}>
                     <Pressable onPress={onBack}>
-                        <Ionicons name="chevron-back" size={24} color="#111827" />
+                        <Ionicons name="chevron-back" size={24} color={theme.text} />
                     </Pressable>
 
                     <View style={styles.headerText}>
-                        <Text style={styles.title}>{course.name}</Text>
-                        <Text style={styles.subtitle}>{course.code || "—"}</Text>
+                        <Text style={[styles.title, { color: theme.text }]}>{course.name}</Text>
+                        <Text style={[styles.subtitle, { color: theme.muted }]}>
+                            {course.code || "—"}
+                        </Text>
                     </View>
 
                     <Pressable onPress={() => setShowUpdateAssessment(true)}>
-                        <Text style={styles.updateText}>Update Assessment</Text>
+                        <Text style={[styles.updateText, { color: theme.accent }]}>
+                            Update Assessment
+                        </Text>
                     </Pressable>
                 </View>
 
-                <View style={styles.summaryCard}>
+                <View style={[styles.summaryCard, { backgroundColor: theme.card }]}>
                     <View style={styles.badgesRow}>
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>
+                        <View style={[styles.badge, { backgroundColor: theme.cardAlt }]}>
+                            <Text style={[styles.badgeText, { color: theme.text }]}>
                                 {course.credits || 0} credits
                             </Text>
                         </View>
-                        <View style={styles.badgeAccent}>
+                        <View style={[styles.badgeAccent, { backgroundColor: "#FEF3C7" }]}>
                             <Text style={styles.badgeAccentText}>
                                 Target: {course.targetGrade || "—"}
                             </Text>
@@ -180,15 +186,17 @@ export default function CourseDetailScreen({
                         <View>
                             {showCurrentGrade ? (
                                 <>
-                                    <Text style={styles.gradeText}>
+                                    <Text style={[styles.gradeText, { color: theme.text }]}>
                                         {currentGrade}{" "}
-                                        <Text style={styles.gradePercent}>
+                                        <Text style={[styles.gradePercent, { color: theme.muted }]}>
                                             ({metrics.currentPercent.toFixed(1)}%)
                                         </Text>
                                     </Text>
                                 </>
                             ) : (
-                                <Text style={styles.summaryText}>No grades yet</Text>
+                                <Text style={[styles.summaryText, { color: theme.muted }]}>
+                                    No grades yet
+                                </Text>
                             )}
                         </View>
                         <Pressable onPress={handleCirclePress}>
@@ -211,15 +219,15 @@ export default function CourseDetailScreen({
                         </Pressable>
                     </View>
 
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-                    <Text style={styles.instructor}>
+                    <Text style={[styles.instructor, { color: theme.muted }]}>
                         Instructor: {course.instructor || "—"}
                     </Text>
                 </View>
 
                 <Pressable
-                    style={styles.addAssessmentButton}
+                    style={[styles.addAssessmentButton, { backgroundColor: theme.accent }]}
                     onPress={() => setShowAddAssessment(true)}
                 >
                     <Ionicons name="add" size={20} color="#FFF" />
@@ -229,20 +237,25 @@ export default function CourseDetailScreen({
                 {assessments.length === 0 && (
                     <View style={styles.empty}>
                         <Text style={styles.emptyIcon}>📝</Text>
-                        <Text style={styles.emptyTitle}>No assessments yet</Text>
-                        <Text style={styles.emptySub}>
+                        <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                            No assessments yet
+                        </Text>
+                        <Text style={[styles.emptySub, { color: theme.muted }]}>
                             Add assignments, quizzes, and exams to track your progress
                         </Text>
                     </View>
                 )}
 
                 {assessments.map((assessment) => (
-                    <View key={assessment.id} style={styles.assessmentCard}>
+                    <View
+                        key={assessment.id}
+                        style={[styles.assessmentCard, { backgroundColor: theme.card }]}
+                    >
                         <View>
-                            <Text style={styles.assessmentTitle}>
+                            <Text style={[styles.assessmentTitle, { color: theme.text }]}>
                                 {assessment.name}
                             </Text>
-                            <Text style={styles.assessmentMeta}>
+                            <Text style={[styles.assessmentMeta, { color: theme.muted }]}>
                                 {assessment.type} • {assessment.weight}%{" "}
                                 {typeof assessment.score === "number"
                                     ? `• Score: ${assessment.score}%`
@@ -251,16 +264,16 @@ export default function CourseDetailScreen({
                         </View>
                         <View style={styles.assessmentActions}>
                             <Pressable
-                                style={styles.iconButton}
+                                style={[styles.iconButton, { backgroundColor: theme.cardAlt }]}
                                 onPress={() => openEditScore(assessment)}
                             >
                                 <Ionicons
                                     name="create-outline"
                                     size={18}
-                                    color="#6B7280"
+                                    color={theme.muted}
                                 />
                             </Pressable>
-                            <Text style={styles.assessmentStatus}>
+                            <Text style={[styles.assessmentStatus, { color: theme.muted }]}>
                                 {typeof assessment.score === "number"
                                     ? "Completed"
                                     : "Planned"}
@@ -273,8 +286,10 @@ export default function CourseDetailScreen({
                     style={styles.deleteRow}
                     onPress={() => onDeleteCourse(semesterId, course.id)}
                 >
-                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                    <Text style={styles.deleteText}>Delete Course</Text>
+                    <Ionicons name="trash-outline" size={18} color={theme.danger} />
+                    <Text style={[styles.deleteText, { color: theme.danger }]}>
+                        Delete Course
+                    </Text>
                 </Pressable>
             </ScrollView>
 

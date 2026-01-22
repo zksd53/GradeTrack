@@ -1,15 +1,24 @@
 import { View, Text, Pressable, StyleSheet, SafeAreaView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useContext } from "react";
+import { ThemeContext } from "../theme";
 
 export default function BottomTabBar({ activeTab, setActiveTab, height }) {
+    const { theme } = useContext(ThemeContext);
     return (
-        <SafeAreaView style={[styles.safe, { height }]}>
+        <SafeAreaView
+            style={[
+                styles.safe,
+                { height, backgroundColor: theme.navBg, borderTopColor: theme.navBorder },
+            ]}
+        >
             <View style={styles.container}>
                 <Tab
                     label="Home"
                     icon="home"
                     active={activeTab === "home"}
                     onPress={() => setActiveTab("home")}
+                    theme={theme}
                 />
 
                 <Tab
@@ -17,6 +26,7 @@ export default function BottomTabBar({ activeTab, setActiveTab, height }) {
                     icon="book"
                     active={activeTab === "semesters"}
                     onPress={() => setActiveTab("semesters")}
+                    theme={theme}
                 />
 
                 <Tab
@@ -24,6 +34,7 @@ export default function BottomTabBar({ activeTab, setActiveTab, height }) {
                     icon="settings"
                     active={activeTab === "settings"}
                     onPress={() => setActiveTab("settings")}
+                    theme={theme}
                 />
             </View>
 
@@ -33,23 +44,30 @@ export default function BottomTabBar({ activeTab, setActiveTab, height }) {
     );
 }
 
-function Tab({ label, active, onPress, icon }) {
+function Tab({ label, active, onPress, icon, theme }) {
     return (
         <Pressable onPress={onPress} style={styles.tab}>
             {icon && (
                 <Ionicons
                     name={active ? icon : `${icon}-outline`}
                     size={22}
-                    color={active ? "#6C7CFF" : "#9AA3B2"}
+                    color={active ? theme.navActive : theme.navText}
                     style={{ marginBottom: 8 }}
                 />
             )}
 
-            <Text style={[styles.text, active && styles.active]}>
+            <Text
+                style={[
+                    styles.text,
+                    { color: theme.navText },
+                    active && styles.active,
+                    active && { color: theme.text },
+                ]}
+            >
                 {label}
             </Text>
 
-            {active && <View style={styles.dot} />}
+            {active && <View style={[styles.dot, { backgroundColor: theme.navActive }]} />}
         </Pressable>
     );
 }
@@ -62,9 +80,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: "#0B1020",
         borderTopWidth: 1,
-        borderTopColor: "#1C2436",
     },
     container: {
         flex: 1,
@@ -78,13 +94,11 @@ const styles = StyleSheet.create({
         paddingTop : 5.5,
     },
     text: {
-        color: "#9AA3B2",
         fontSize: 13,
         fontWeight: "500",
         marginBottom : 1,
     },
     active: {
-        color: "#FFFFFF",
         fontWeight: "600",
     },
     dot: {
@@ -92,6 +106,5 @@ const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: "#6C7CFF",
     },
 });

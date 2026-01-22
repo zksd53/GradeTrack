@@ -7,7 +7,8 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ThemeContext } from "../theme";
 
 // Components
 import NewSemesterSheet from "../components/NewSemesterSheet";
@@ -20,6 +21,7 @@ export default function SemestersScreen({
   onOpenSemester,
 }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
+  const { theme } = useContext(ThemeContext);
 
   console.log("SemestersScreen render. semesters:", semesters);
 
@@ -33,17 +35,17 @@ export default function SemestersScreen({
   /* ---------- List View ---------- */
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         scrollEnabled={!showNewSemester}
       >
-        <Text style={styles.header}>Semesters</Text>
+        <Text style={[styles.header, { color: theme.text }]}>Semesters</Text>
 
         <Pressable
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: theme.accent }]}
           onPress={() => setShowNewSemester(true)}
         >
           <Ionicons name="add" size={20} color="#FFF" />
@@ -58,6 +60,7 @@ export default function SemestersScreen({
             courses={s.courses}
             status={s.status}
             current={s.current}
+            theme={theme}
             onPress={() => {
               console.log("SEMESTER CLICKED:", s.id);
               onOpenSemester(s.id);
@@ -84,6 +87,7 @@ function SemesterCard({
   status,
   current,
   onPress,
+  theme,
 }) {
   const safeCourses = Array.isArray(courses) ? courses : [];
 
@@ -93,26 +97,29 @@ function SemesterCard({
   );
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable
+      style={[styles.card, { backgroundColor: theme.card }]}
+      onPress={onPress}
+    >
       <View style={styles.gpaCircle}>
-        <Text style={styles.gpaText}>{gpa}</Text>
+        <Text style={[styles.gpaText, { color: theme.text }]}>{gpa}</Text>
       </View>
 
       <View style={styles.info}>
         <View style={styles.row}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
           {current && <Badge text="Current" />}
         </View>
 
-        <Text style={styles.meta}>
+        <Text style={[styles.meta, { color: theme.muted }]}>
           {safeCourses.length} course{safeCourses.length !== 1 ? "s" : ""} ·{" "}
           {totalCredits} credits
         </Text>
 
-        <StatusBadge text={status} />
+        <StatusBadge text={status} theme={theme} />
       </View>
 
-      <Ionicons name="chevron-forward" size={20} color="#9AA3B2" />
+      <Ionicons name="chevron-forward" size={20} color={theme.muted} />
     </Pressable>
   );
 }
@@ -127,13 +134,18 @@ function Badge({ text }) {
   );
 }
 
-function StatusBadge({ text }) {
+function StatusBadge({ text, theme }) {
   const isProgress = text === "In Progress";
   return (
     <View
       style={[
         styles.statusBadge,
-        isProgress ? styles.progress : styles.completed,
+        isProgress
+          ? styles.progress
+          : styles.completed,
+        isProgress
+          ? { backgroundColor: "#E0ECFF" }
+          : { backgroundColor: "#E7F8ED" },
       ]}
     >
       <Text
