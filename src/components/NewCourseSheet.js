@@ -5,6 +5,9 @@ import {
     Pressable,
     TextInput,
     Modal,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,17 +21,23 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
     const [notes, setNotes] = useState("");
 
     const handleCreate = () => {
-        if (!name.trim()) return;
+        const trimmedName = name.trim();
+        const trimmedCode = code.trim();
+        const safeCredits = Number.isFinite(Number(credits))
+            ? Number(credits)
+            : 0;
+        if (!trimmedName) return;
 
         onCreate({
             id: Date.now().toString(),
-            name,
-            code,
-            credits,
+            name: trimmedName,
+            code: trimmedCode,
+            credits: safeCredits,
             instructor,
             targetGrade,
             notes,
             grade: null,
+            assessments: [],
         });
 
         // reset
@@ -43,70 +52,79 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
-            <View style={styles.overlay}>
+            <KeyboardAvoidingView
+                style={styles.overlay}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
                 <View style={styles.sheet}>
-                    <View style={styles.header}>
-                        <Text style={styles.title}>New Course</Text>
-                        <Pressable onPress={onClose}>
-                            <Ionicons name="close" size={22} />
+                    <ScrollView
+                        contentContainerStyle={styles.sheetContent}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={styles.header}>
+                            <Text style={styles.title}>New Course</Text>
+                            <Pressable onPress={onClose}>
+                                <Ionicons name="close" size={22} />
+                            </Pressable>
+                        </View>
+
+                        <Text style={styles.label}>Course Name *</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Introduction to Computer Science"
+                            value={name}
+                            onChangeText={setName}
+                        />
+
+                        <Text style={styles.label}>Course Code</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="CS101"
+                            value={code}
+                            onChangeText={setCode}
+                        />
+
+                        <Text style={styles.label}>Credit Hours *</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="3"
+                            keyboardType="numeric"
+                            value={String(credits)}
+                            onChangeText={(v) => setCredits(Number(v))}
+                        />
+
+                        <Text style={styles.label}>Instructor</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Dr. Smith"
+                            value={instructor}
+                            onChangeText={setInstructor}
+                        />
+
+                        <Text style={styles.label}>Target Grade</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="A"
+                            value={targetGrade}
+                            onChangeText={setTargetGrade}
+                        />
+
+                        <Text style={styles.label}>Notes</Text>
+                        <TextInput
+                            style={[styles.input, styles.notes]}
+                            placeholder="Any additional notes..."
+                            multiline
+                            value={notes}
+                            onChangeText={setNotes}
+                        />
+
+                        <Pressable style={styles.createBtn} onPress={handleCreate}>
+                            <Text style={styles.createText}>Create Course</Text>
                         </Pressable>
-                    </View>
-
-                    <Text style={styles.label}>Course Name *</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Introduction to Computer Science"
-                        value={name}
-                        onChangeText={setName}
-                    />
-
-                    <Text style={styles.label}>Course Code</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="CS101"
-                        value={code}
-                        onChangeText={setCode}
-                    />
-
-                    <Text style={styles.label}>Credit Hours *</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="3"
-                        keyboardType="numeric"
-                        value={String(credits)}
-                        onChangeText={(v) => setCredits(Number(v))}
-                    />
-
-                    <Text style={styles.label}>Instructor</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Dr. Smith"
-                        value={instructor}
-                        onChangeText={setInstructor}
-                    />
-
-                    <Text style={styles.label}>Target Grade</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="A"
-                        value={targetGrade}
-                        onChangeText={setTargetGrade}
-                    />
-
-                    <Text style={styles.label}>Notes</Text>
-                    <TextInput
-                        style={[styles.input, styles.notes]}
-                        placeholder="Any additional notes..."
-                        multiline
-                        value={notes}
-                        onChangeText={setNotes}
-                    />
-
-                    <Pressable style={styles.createBtn} onPress={handleCreate}>
-                        <Text style={styles.createText}>Create Course</Text>
-                    </Pressable>
+                    </ScrollView>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
@@ -124,6 +142,9 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
+    },
+    sheetContent: {
+        paddingBottom: 12,
     },
     header: {
         flexDirection: "row",

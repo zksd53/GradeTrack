@@ -185,8 +185,8 @@ export default function NewSemesterSheet({
                                 year,
                                 status,
                                 gpa: "0.00",
-                                courses: "0 courses",
-                                credits: "0 credits",
+                                courses: [],
+                                credits: 0,
                                 current: isCurrent,
                             });
                             onClose();

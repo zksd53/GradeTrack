@@ -11,51 +11,24 @@ import { useState } from "react";
 
 // Components
 import NewSemesterSheet from "../components/NewSemesterSheet";
-import SemesterDetailScreen from "./SemesterDetailScreen";
 
 /* ---------- Screen ---------- */
 
-export default function SemestersScreen({ semesters, saveSemesters }) {
+export default function SemestersScreen({
+  semesters,
+  saveSemesters,
+  onOpenSemester,
+}) {
   const [showNewSemester, setShowNewSemester] = useState(false);
-  const [selectedSemesterId, setSelectedSemesterId] = useState(null);
 
-  const selectedSemester = semesters.find(
-    (s) => s.id === selectedSemesterId
-  );
+  console.log("SemestersScreen render. semesters:", semesters);
 
   /* ---------- Handlers ---------- */
 
   const handleAddSemester = (newSemester) => {
+    console.log("Adding semester:", newSemester);
     saveSemesters([...semesters, newSemester]);
   };
-
-  const handleAddCourse = (semesterId, newCourse) => {
-    const updated = semesters.map((s) =>
-      s.id === semesterId
-        ? { ...s, courses: [...(s.courses || []), newCourse] }
-        : s
-    );
-    saveSemesters(updated);
-  };
-
-  const handleDeleteSemester = (semesterId) => {
-    const updated = semesters.filter((s) => s.id !== semesterId);
-    saveSemesters(updated);
-    setSelectedSemesterId(null);
-  };
-
-  /* ---------- Detail View ---------- */
-
-  if (selectedSemesterId && selectedSemester) {
-    return (
-      <SemesterDetailScreen
-        semester={selectedSemester}
-        onBack={() => setSelectedSemesterId(null)}
-        onDelete={handleDeleteSemester}
-        onAddCourse={handleAddCourse}
-      />
-    );
-  }
 
   /* ---------- List View ---------- */
 
@@ -83,10 +56,12 @@ export default function SemestersScreen({ semesters, saveSemesters }) {
             gpa={s.gpa}
             title={`${s.term} ${s.year}`}
             courses={s.courses}
-            credits={s.credits}
             status={s.status}
             current={s.current}
-            onPress={() => setSelectedSemesterId(s.id)}
+            onPress={() => {
+              console.log("SEMESTER CLICKED:", s.id);
+              onOpenSemester(s.id);
+            }}
           />
         ))}
       </ScrollView>
@@ -106,11 +81,17 @@ function SemesterCard({
   gpa,
   title,
   courses,
-  credits,
   status,
   current,
   onPress,
 }) {
+  const safeCourses = Array.isArray(courses) ? courses : [];
+
+  const totalCredits = safeCourses.reduce(
+    (sum, c) => sum + (Number(c?.credits) || 0),
+    0
+  );
+
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.gpaCircle}>
@@ -124,7 +105,8 @@ function SemesterCard({
         </View>
 
         <Text style={styles.meta}>
-          {(courses?.length || 0)} courses · {credits}
+          {safeCourses.length} course{safeCourses.length !== 1 ? "s" : ""} ·{" "}
+          {totalCredits} credits
         </Text>
 
         <StatusBadge text={status} />

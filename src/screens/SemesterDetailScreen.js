@@ -15,6 +15,7 @@ export default function SemesterDetailScreen({
     onBack,
     onDelete,
     onAddCourse,
+    onOpenCourse,
 }) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
@@ -89,7 +90,11 @@ export default function SemesterDetailScreen({
 
                 {/* ---------- Courses List ---------- */}
                 {courses.map((course) => (
-                    <Pressable key={course.id} style={styles.courseCard}>
+                    <Pressable
+                        key={course.id}
+                        style={styles.courseCard}
+                        onPress={() => onOpenCourse(course.id)}
+                    >
                         <View style={styles.courseLeft}>
                             <View style={styles.progressCircle}>
                                 <Text style={styles.progressText}>0%</Text>
