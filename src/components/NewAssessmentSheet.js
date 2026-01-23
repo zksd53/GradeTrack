@@ -10,19 +10,23 @@ import {
     Platform,
     Switch,
 } from "react-native";
-import { useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemeContext } from "../theme";
 
 export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
+    const { theme } = useContext(ThemeContext);
     const [name, setName] = useState("");
     const [type, setType] = useState("Assignment");
     const [weight, setWeight] = useState("10");
     const [dueMonth, setDueMonth] = useState("Jan");
     const [dueDay, setDueDay] = useState("1");
+    const [dueYear, setDueYear] = useState("2024");
     const [completed, setCompleted] = useState(false);
     const [showTypeDropdown, setShowTypeDropdown] = useState(false);
     const [showMonthDropdown, setShowMonthDropdown] = useState(false);
     const [showDayDropdown, setShowDayDropdown] = useState(false);
+    const [showYearDropdown, setShowYearDropdown] = useState(false);
 
     const typeOptions = [
         "Assignment",
@@ -50,9 +54,21 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
         "Dec",
     ];
     const dayOptions = Array.from({ length: 31 }, (_, i) => String(i + 1));
+    const yearOptions = Array.from({ length: 21 }, (_, i) =>
+        String(2018 + i)
+    );
     const weightValue = Number(weight);
     const showWeightWarning =
         Number.isFinite(weightValue) && weightValue > 100;
+    const inputTheme = useMemo(
+        () => ({
+            backgroundColor: theme.cardAlt,
+            borderColor: theme.border,
+            color: theme.text,
+            placeholderTextColor: theme.muted,
+        }),
+        [theme]
+    );
 
     const handleCreate = () => {
         const trimmedName = name.trim();
@@ -63,7 +79,7 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
             name: trimmedName,
             type: type.trim() || "Assignment",
             weight: Number(weight) || 0,
-            dueDate: `${dueMonth} ${dueDay}`,
+            dueDate: `${dueMonth} ${dueDay}, ${dueYear}`,
             completed,
             score: null,
         });
@@ -73,10 +89,12 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
         setWeight("10");
         setDueMonth("Jan");
         setDueDay("1");
+        setDueYear("2024");
         setCompleted(false);
         setShowTypeDropdown(false);
         setShowMonthDropdown(false);
         setShowDayDropdown(false);
+        setShowYearDropdown(false);
         onClose();
     };
 
@@ -93,34 +111,44 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={styles.header}>
-                            <Text style={styles.title}>New Assessment</Text>
+                            <Text style={[styles.title, { color: theme.text }]}>
+                                New Assessment
+                            </Text>
                             <Pressable onPress={onClose}>
-                                <Ionicons name="close" size={22} />
+                                <Ionicons name="close" size={22} color={theme.text} />
                             </Pressable>
                         </View>
 
-                        <Text style={styles.label}>Name *</Text>
+                        <Text style={[styles.label, { color: theme.muted }]}>
+                            Name *
+                        </Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, inputTheme]}
                             placeholder="Midterm Exam 1"
                             value={name}
                             onChangeText={setName}
+                            placeholderTextColor={inputTheme.placeholderTextColor}
                         />
 
-                        <Text style={styles.label}>Type</Text>
+                        <Text style={[styles.label, { color: theme.muted }]}>
+                            Type
+                        </Text>
                         <Pressable
-                            style={styles.select}
+                            style={[styles.select, { backgroundColor: theme.cardAlt, borderColor: theme.border }]}
                             onPress={() => {
                                 setShowTypeDropdown(!showTypeDropdown);
                                 setShowMonthDropdown(false);
                                 setShowDayDropdown(false);
+                                setShowYearDropdown(false);
                             }}
                         >
-                            <Text style={styles.selectText}>{type}</Text>
-                            <Ionicons name="chevron-down" size={18} color="#6B7280" />
+                            <Text style={[styles.selectText, { color: theme.text }]}>
+                                {type}
+                            </Text>
+                            <Ionicons name="chevron-down" size={18} color={theme.muted} />
                         </Pressable>
                         {showTypeDropdown && (
-                            <View style={styles.dropdown}>
+                            <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
                                 {typeOptions.map((item) => (
                                     <Pressable
                                         key={item}
@@ -130,68 +158,111 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
                                             setShowTypeDropdown(false);
                                         }}
                                     >
-                                        <Text style={styles.dropdownText}>{item}</Text>
+                                        <Text style={[styles.dropdownText, { color: theme.text }]}>
+                                            {item}
+                                        </Text>
                                     </Pressable>
                                 ))}
                             </View>
                         )}
 
-                        <Text style={styles.label}>Weight (%)</Text>
+                        <Text style={[styles.label, { color: theme.muted }]}>
+                            Weight (%)
+                        </Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, inputTheme]}
                             placeholder="10"
                             keyboardType="numeric"
                             value={weight}
                             onChangeText={setWeight}
+                            placeholderTextColor={inputTheme.placeholderTextColor}
                         />
                         {showWeightWarning && (
-                            <View style={styles.warning}>
+                            <View style={[styles.warning, { backgroundColor: theme.cardAlt }]}>
                                 <Ionicons
                                     name="alert-circle"
                                     size={16}
                                     color="#B45309"
                                 />
-                                <Text style={styles.warningText}>
+                                <Text style={[styles.warningText, { color: "#B45309" }]}>
                                     Quiz percentages should be 100 or less.
                                 </Text>
                             </View>
                         )}
 
-                        <Text style={styles.label}>Due Date</Text>
+                        <Text style={[styles.label, { color: theme.muted }]}>
+                            Due Date
+                        </Text>
                         <View style={styles.dateRow}>
                             <Pressable
-                                style={[styles.select, styles.dateSelect]}
+                                style={[
+                                    styles.select,
+                                    styles.dateSelect,
+                                    { backgroundColor: theme.cardAlt, borderColor: theme.border },
+                                ]}
                                 onPress={() => {
                                     setShowMonthDropdown(!showMonthDropdown);
                                     setShowDayDropdown(false);
                                     setShowTypeDropdown(false);
+                                    setShowYearDropdown(false);
                                 }}
                             >
-                                <Text style={styles.selectText}>{dueMonth}</Text>
+                                <Text style={[styles.selectText, { color: theme.text }]}>
+                                    {dueMonth}
+                                </Text>
                                 <Ionicons
                                     name="chevron-down"
                                     size={18}
-                                    color="#6B7280"
+                                    color={theme.muted}
                                 />
                             </Pressable>
                             <Pressable
-                                style={[styles.select, styles.dateSelect]}
+                                style={[
+                                    styles.select,
+                                    styles.dateSelect,
+                                    { backgroundColor: theme.cardAlt, borderColor: theme.border },
+                                ]}
                                 onPress={() => {
                                     setShowDayDropdown(!showDayDropdown);
                                     setShowMonthDropdown(false);
                                     setShowTypeDropdown(false);
+                                    setShowYearDropdown(false);
                                 }}
                             >
-                                <Text style={styles.selectText}>{dueDay}</Text>
+                                <Text style={[styles.selectText, { color: theme.text }]}>
+                                    {dueDay}
+                                </Text>
                                 <Ionicons
                                     name="chevron-down"
                                     size={18}
-                                    color="#6B7280"
+                                    color={theme.muted}
+                                />
+                            </Pressable>
+                            <Pressable
+                                style={[
+                                    styles.select,
+                                    styles.dateSelect,
+                                    { backgroundColor: theme.cardAlt, borderColor: theme.border },
+                                ]}
+                                onPress={() => {
+                                    setShowYearDropdown(!showYearDropdown);
+                                    setShowMonthDropdown(false);
+                                    setShowDayDropdown(false);
+                                    setShowTypeDropdown(false);
+                                }}
+                            >
+                                <Text style={[styles.selectText, { color: theme.text }]}>
+                                    {dueYear}
+                                </Text>
+                                <Ionicons
+                                    name="chevron-down"
+                                    size={18}
+                                    color={theme.muted}
                                 />
                             </Pressable>
                         </View>
                         {showMonthDropdown && (
-                            <View style={styles.dropdown}>
+                            <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
                                 {monthOptions.map((item) => (
                                     <Pressable
                                         key={item}
@@ -201,13 +272,15 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
                                             setShowMonthDropdown(false);
                                         }}
                                     >
-                                        <Text style={styles.dropdownText}>{item}</Text>
+                                        <Text style={[styles.dropdownText, { color: theme.text }]}>
+                                            {item}
+                                        </Text>
                                     </Pressable>
                                 ))}
                             </View>
                         )}
                         {showDayDropdown && (
-                            <View style={styles.dropdown}>
+                            <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
                                 {dayOptions.map((item) => (
                                     <Pressable
                                         key={item}
@@ -217,24 +290,60 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
                                             setShowDayDropdown(false);
                                         }}
                                     >
-                                        <Text style={styles.dropdownText}>{item}</Text>
+                                        <Text style={[styles.dropdownText, { color: theme.text }]}>
+                                            {item}
+                                        </Text>
                                     </Pressable>
                                 ))}
                             </View>
                         )}
+                        {showYearDropdown && (
+                            <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
+                                <ScrollView style={styles.dropdownScroll}>
+                                    {yearOptions.map((item) => (
+                                        <Pressable
+                                            key={item}
+                                            style={styles.dropdownItem}
+                                            onPress={() => {
+                                                setDueYear(item);
+                                                setShowYearDropdown(false);
+                                            }}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.dropdownText,
+                                                    { color: theme.text },
+                                                ]}
+                                            >
+                                                {item}
+                                            </Text>
+                                        </Pressable>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        )}
 
-                        <View style={styles.switchRow}>
+                        <View style={[styles.switchRow, { backgroundColor: theme.cardAlt }]}>
                             <View>
-                                <Text style={styles.switchTitle}>Completed</Text>
-                                <Text style={styles.switchSub}>Mark as graded</Text>
+                                <Text style={[styles.switchTitle, { color: theme.text }]}>
+                                    Completed
+                                </Text>
+                                <Text style={[styles.switchSub, { color: theme.muted }]}>
+                                    Mark as graded
+                                </Text>
                             </View>
                             <Switch
                                 value={completed}
                                 onValueChange={setCompleted}
+                                trackColor={{ false: theme.border, true: theme.accent }}
+                                thumbColor="#FFFFFF"
                             />
                         </View>
 
-                        <Pressable style={styles.createBtn} onPress={handleCreate}>
+                        <Pressable
+                            style={[styles.createBtn, { backgroundColor: theme.accent }]}
+                            onPress={handleCreate}
+                        >
                             <Text style={styles.createText}>
                                 Create Assessment
                             </Text>
@@ -253,7 +362,6 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
     },
     sheet: {
-        backgroundColor: "#FFF",
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
@@ -271,7 +379,6 @@ const styles = StyleSheet.create({
     label: { fontSize: 13, fontWeight: "600", marginTop: 10 },
     input: {
         borderWidth: 1,
-        borderColor: "#E5E7EB",
         borderRadius: 12,
         padding: 12,
         marginTop: 4,
@@ -296,6 +403,7 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         backgroundColor: "#FFF",
     },
+    dropdownScroll: { maxHeight: 200 },
     dropdownItem: {
         padding: 12,
         borderBottomWidth: 1,
@@ -313,7 +421,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        backgroundColor: "#F9FAFB",
         padding: 14,
         borderRadius: 12,
         marginTop: 14,

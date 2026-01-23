@@ -17,9 +17,9 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
     const { theme } = useContext(ThemeContext);
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
-    const [credits, setCredits] = useState(3);
+    const [credits, setCredits] = useState("");
     const [instructor, setInstructor] = useState("");
-    const [targetGrade, setTargetGrade] = useState("A");
+    const [targetGrade, setTargetGrade] = useState("");
     const [notes, setNotes] = useState("");
     const [touched, setTouched] = useState({
         name: false,
@@ -63,9 +63,9 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
         // reset
         setName("");
         setCode("");
-        setCredits(3);
+        setCredits("");
         setInstructor("");
-        setTargetGrade("A");
+        setTargetGrade("");
         setNotes("");
         onClose();
     };
@@ -128,8 +128,8 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
                             style={[styles.input, inputTheme]}
                             placeholder="3"
                             keyboardType="numeric"
-                            value={String(credits)}
-                            onChangeText={(v) => setCredits(Number(v))}
+                            value={credits}
+                            onChangeText={setCredits}
                             onFocus={() => {
                                 if (!touched.credits) setCredits("");
                                 setTouched((prev) => ({ ...prev, credits: true }));
