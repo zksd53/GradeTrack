@@ -12,10 +12,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useContext, useMemo, useState } from "react";
 import { ThemeContext } from "../theme";
 
-export default function SettingsScreen({ semesters = [] }) {
+export default function SettingsScreen({ semesters = [], onClearAll }) {
   const { darkMode, setDarkMode, theme } = useContext(ThemeContext);
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const stats = useMemo(() => {
     const semestersCount = semesters.length;
@@ -94,18 +95,13 @@ export default function SettingsScreen({ semesters = [] }) {
 
         <Section title="DATA" theme={theme}>
           <Row
-            icon="sync-outline"
-            title="Sync Data"
-            subtitle="Data syncs automatically"
-            theme={theme}
-          />
-          <Row
             icon="trash-outline"
             title="Clear All Data"
             subtitle="Delete all semesters, courses, and assessments"
             danger
             theme={theme}
             last
+            onPress={() => setShowClearConfirm(true)}
           />
         </Section>
 
@@ -253,6 +249,15 @@ export default function SettingsScreen({ semesters = [] }) {
           <Row icon="log-out-outline" title="Sign Out" theme={theme} last />
         </Section>
       </ScrollView>
+      <ConfirmModal
+        visible={showClearConfirm}
+        theme={theme}
+        onCancel={() => setShowClearConfirm(false)}
+        onDelete={() => {
+          setShowClearConfirm(false);
+          if (onClearAll) onClearAll();
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -265,6 +270,37 @@ function Section({ title, children, theme }) {
         style={[styles.sectionCard, { backgroundColor: theme.card }]}
       >
         {children}
+      </View>
+    </View>
+  );
+}
+
+function ConfirmModal({ visible, theme, onCancel, onDelete }) {
+  if (!visible) return null;
+  return (
+    <View style={styles.modalOverlay}>
+      <View style={[styles.modal, { backgroundColor: theme.card }]}>
+        <Text style={[styles.modalTitle, { color: theme.text }]}>
+          Delete all data?
+        </Text>
+        <Text style={[styles.modalText, { color: theme.muted }]}>
+          This will permanently delete all semesters, courses, and assessments.
+          This action cannot be undone.
+        </Text>
+        <Pressable
+          style={[styles.modalDelete, { backgroundColor: theme.danger }]}
+          onPress={onDelete}
+        >
+          <Text style={styles.modalDeleteText}>Delete</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.modalCancel, { borderColor: theme.border }]}
+          onPress={onCancel}
+        >
+          <Text style={[styles.modalCancelText, { color: theme.text }]}>
+            Cancel
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -437,6 +473,53 @@ const styles = StyleSheet.create({
   rowSubtitle: {
     fontSize: 12,
     marginTop: 2,
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modal: {
+    width: "100%",
+    borderRadius: 18,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  modalDelete: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  modalDeleteText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  modalCancel: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  modalCancelText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   privacyCard: {
     padding: 16,

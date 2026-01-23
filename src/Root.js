@@ -289,9 +289,14 @@ export default function Root() {
                         />
                     )}
 
-                    {activeTab === "settings" && (
-                        <SettingsScreen semesters={semesters} />
-                    )}
+            {activeTab === "settings" && (
+                <SettingsScreen
+                    semesters={semesters}
+                    onClearAll={() => {
+                        saveSemesters([]);
+                    }}
+                />
+            )}
                 </Animated.View>
 
             <BottomTabBar
