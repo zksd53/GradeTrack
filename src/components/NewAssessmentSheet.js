@@ -29,14 +29,14 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
     const [showYearDropdown, setShowYearDropdown] = useState(false);
 
     const typeOptions = [
-        "Assignment",
-        "Quiz",
-        "Midterm",
-        "Final Exam",
-        "Lab",
-        "Project",
-        "Participation",
-        "Other",
+        { label: "Assignment", icon: "📝" },
+        { label: "Quiz", icon: "❓" },
+        { label: "Midterm", icon: "📋" },
+        { label: "Final Exam", icon: "🎓" },
+        { label: "Lab", icon: "🔬" },
+        { label: "Project", icon: "📊" },
+        { label: "Participation", icon: "🙋" },
+        { label: "Other", icon: "📌" },
     ];
 
     const monthOptions = [
@@ -78,6 +78,8 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
             id: Date.now().toString(),
             name: trimmedName,
             type: type.trim() || "Assignment",
+            typeIcon:
+                typeOptions.find((item) => item.label === type)?.icon || "",
             weight: Number(weight) || 0,
             dueDate: `${dueMonth} ${dueDay}, ${dueYear}`,
             completed,
@@ -143,6 +145,7 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
                             }}
                         >
                             <Text style={[styles.selectText, { color: theme.text }]}>
+                                {typeOptions.find((item) => item.label === type)?.icon}{" "}
                                 {type}
                             </Text>
                             <Ionicons name="chevron-down" size={18} color={theme.muted} />
@@ -151,16 +154,26 @@ export default function NewAssessmentSheet({ visible, onClose, onCreate }) {
                             <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
                                 {typeOptions.map((item) => (
                                     <Pressable
-                                        key={item}
-                                        style={styles.dropdownItem}
+                                        key={item.label}
+                                        style={[
+                                            styles.dropdownItem,
+                                            item.label === type && styles.dropdownItemActive,
+                                        ]}
                                         onPress={() => {
-                                            setType(item);
+                                            setType(item.label);
                                             setShowTypeDropdown(false);
                                         }}
                                     >
                                         <Text style={[styles.dropdownText, { color: theme.text }]}>
-                                            {item}
+                                            {item.icon} {item.label}
                                         </Text>
+                                        {item.label === type && (
+                                            <Ionicons
+                                                name="checkmark"
+                                                size={16}
+                                                color={theme.muted}
+                                            />
+                                        )}
                                     </Pressable>
                                 ))}
                             </View>
@@ -375,8 +388,8 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         marginBottom: 16,
     },
-    title: { fontSize: 18, fontWeight: "700" },
-    label: { fontSize: 13, fontWeight: "600", marginTop: 10 },
+    title: { fontSize: 18, fontWeight: "600" },
+    label: { fontSize: 13, fontWeight: "500", marginTop: 10 },
     input: {
         borderWidth: 1,
         borderRadius: 12,
@@ -394,7 +407,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         backgroundColor: "#FFF",
     },
-    selectText: { fontSize: 14, color: "#111827" },
+    selectText: { fontSize: 14, color: "#111827", fontWeight: "500" },
     dropdown: {
         borderWidth: 1,
         borderColor: "#E5E7EB",
@@ -408,8 +421,14 @@ const styles = StyleSheet.create({
         padding: 12,
         borderBottomWidth: 1,
         borderBottomColor: "#F3F4F6",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
     },
-    dropdownText: { fontSize: 14, color: "#111827" },
+    dropdownItemActive: {
+        backgroundColor: "rgba(255,255,255,0.04)",
+    },
+    dropdownText: { fontSize: 14, color: "#111827", fontWeight: "500" },
     dateRow: {
         flexDirection: "row",
         gap: 10,

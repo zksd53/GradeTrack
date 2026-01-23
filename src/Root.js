@@ -126,13 +126,13 @@ export default function Root() {
                                 setSelectedSemesterId(semesterId);
                                 setSelectedCourseId(courseId);
                             }}
-                            onUpdateAssessment={(
-                                semesterId,
-                                courseId,
-                                assessmentId,
-                                updates
-                            ) => {
-                                saveSemesters((prev) =>
+                    onUpdateAssessment={(
+                        semesterId,
+                        courseId,
+                        assessmentId,
+                        updates
+                    ) => {
+                        saveSemesters((prev) =>
                                     prev.map((s) =>
                                         s.id === semesterId
                                             ? {
@@ -154,10 +154,31 @@ export default function Root() {
                                             }
                                             : s
                                     )
-                                );
-                            }}
-                        />
-                    )}
+                        );
+                    }}
+                    onDeleteAssessment={(semesterId, courseId, assessmentId) => {
+                        saveSemesters((prev) =>
+                            prev.map((s) =>
+                                s.id === semesterId
+                                    ? {
+                                        ...s,
+                                        courses: (s.courses || []).map((c) =>
+                                            c.id === courseId
+                                                ? {
+                                                    ...c,
+                                                    assessments: (
+                                                        c.assessments || []
+                                                    ).filter((a) => a.id !== assessmentId),
+                                                }
+                                                : c
+                                        ),
+                                    }
+                                    : s
+                            )
+                        );
+                    }}
+                />
+            )}
 
                     {activeTab === "semesters" && !selectedSemester && (
                         <SemestersScreen

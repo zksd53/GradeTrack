@@ -22,6 +22,7 @@ export default function CourseDetailScreen({
     onDeleteCourse,
     onAddAssessment,
     onUpdateAssessment,
+    onDeleteAssessment,
 }) {
     const [showAddAssessment, setShowAddAssessment] = useState(false);
     const [editingAssessment, setEditingAssessment] = useState(null);
@@ -67,8 +68,8 @@ export default function CourseDetailScreen({
         progress: {
             label: "Progress",
             percent: metrics.completedWeight,
-            color: "#E5E7EB",
-            textColor: "#111827",
+            color: "#F59E0B",
+            textColor: "#F59E0B",
         },
         gain: {
             label: "Gained",
@@ -83,6 +84,12 @@ export default function CourseDetailScreen({
             textColor: "#EF4444",
         },
     }[circleMode];
+
+    const formatPercent = (value) => {
+        if (value === null || Number.isNaN(value)) return "0";
+        const rounded = Math.round(value * 10) / 10;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    };
 
     const currentGrade = useMemo(() => {
         if (metrics.currentPercent === null) return null;
@@ -213,7 +220,7 @@ export default function CourseDetailScreen({
                                         { color: displayMode.textColor },
                                     ]}
                                 >
-                                    {Math.round(displayMode.percent)}%
+                                    {formatPercent(displayMode.percent)}%
                                 </Text>
                             </Animated.View>
                         </Pressable>
@@ -251,9 +258,9 @@ export default function CourseDetailScreen({
                         key={assessment.id}
                         style={[styles.assessmentCard, { backgroundColor: theme.card }]}
                     >
-                        <View>
+                        <View style={styles.assessmentMain}>
                             <Text style={[styles.assessmentTitle, { color: theme.text }]}>
-                                {assessment.name}
+                                {assessment.typeIcon ? `${assessment.typeIcon} ` : ""}{assessment.name}
                             </Text>
                             <Text style={[styles.assessmentMeta, { color: theme.muted }]}>
                                 {assessment.type} • {assessment.weight}%{" "}
@@ -271,6 +278,22 @@ export default function CourseDetailScreen({
                                     name="create-outline"
                                     size={18}
                                     color={theme.muted}
+                                />
+                            </Pressable>
+                            <Pressable
+                                style={[styles.iconButton, { backgroundColor: theme.cardAlt }]}
+                                onPress={() =>
+                                    onDeleteAssessment(
+                                        semesterId,
+                                        course.id,
+                                        assessment.id
+                                    )
+                                }
+                            >
+                                <Ionicons
+                                    name="trash-outline"
+                                    size={18}
+                                    color={theme.danger}
                                 />
                             </Pressable>
                             <Text style={[styles.assessmentStatus, { color: theme.muted }]}>
@@ -425,6 +448,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+    },
+    assessmentMain: {
+        flex: 1,
+        marginRight: 10,
     },
     assessmentTitle: { fontSize: 14, fontWeight: "600" },
     assessmentMeta: { fontSize: 12, color: "#6B7280", marginTop: 4 },
