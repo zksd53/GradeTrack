@@ -20,7 +20,7 @@ export default function SemesterDetailScreen({
 }) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
-    const [circleMode, setCircleMode] = useState("progress");
+    const [circleModeByCourse, setCircleModeByCourse] = useState({});
     const { theme } = useContext(ThemeContext);
 
     // ALWAYS derive from props (single source of truth)
@@ -75,27 +75,6 @@ export default function SemesterDetailScreen({
         };
     }, [courses]);
 
-    const displayMode = {
-        progress: {
-            label: "Progress",
-            percent: metrics.completedWeight,
-            color: "#F59E0B",
-            textColor: "#F59E0B",
-        },
-        gain: {
-            label: "Gained",
-            percent: metrics.gained,
-            color: "#10B981",
-            textColor: "#10B981",
-        },
-        loss: {
-            label: "Lost",
-            percent: metrics.lost,
-            color: "#EF4444",
-            textColor: "#EF4444",
-        },
-    }[circleMode];
-
     const formatGpa = (value) => {
         if (value === null || Number.isNaN(value)) return "0.00";
         return value.toFixed(2);
@@ -146,14 +125,58 @@ export default function SemesterDetailScreen({
         return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
     };
 
-    const handleCirclePress = () => {
-        const nextMode =
-            circleMode === "progress"
-                ? "gain"
-                : circleMode === "gain"
-                    ? "loss"
-                    : "progress";
-        setCircleMode(nextMode);
+    const getCourseMetrics = (course) => {
+        const assessments = Array.isArray(course.assessments)
+            ? course.assessments
+            : [];
+        const completedWeight = assessments.reduce(
+            (sum, a) =>
+                sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+            0
+        );
+        const gained = assessments.reduce((sum, a) => {
+            if (typeof a.score !== "number") return sum;
+            const weight = Number(a.weight) || 0;
+            return sum + (weight * a.score) / 100;
+        }, 0);
+        const lost = Math.max(0, completedWeight - gained);
+        return { completedWeight, gained, lost };
+    };
+
+    const getDisplayMode = (course) => {
+        const mode = circleModeByCourse[course.id] || "progress";
+        const courseMetrics = getCourseMetrics(course);
+        const mapping = {
+            progress: {
+                percent: courseMetrics.completedWeight,
+                color: "#F59E0B",
+                textColor: "#F59E0B",
+            },
+            gain: {
+                percent: courseMetrics.gained,
+                color: "#10B981",
+                textColor: "#10B981",
+            },
+            loss: {
+                percent: courseMetrics.lost,
+                color: "#EF4444",
+                textColor: "#EF4444",
+            },
+        };
+        return mapping[mode];
+    };
+
+    const handleCirclePress = (courseId) => {
+        setCircleModeByCourse((prev) => {
+            const current = prev[courseId] || "progress";
+            const next =
+                current === "progress"
+                    ? "gain"
+                    : current === "gain"
+                        ? "loss"
+                        : "progress";
+            return { ...prev, [courseId]: next };
+        });
     };
 
 
@@ -232,17 +255,17 @@ export default function SemesterDetailScreen({
                             <Pressable
                                 style={[
                                     styles.progressCircle,
-                                    { borderColor: displayMode.color },
+                                    { borderColor: getDisplayMode(course).color },
                                 ]}
-                                onPress={handleCirclePress}
+                                onPress={() => handleCirclePress(course.id)}
                             >
                                 <Text
                                     style={[
                                         styles.progressText,
-                                        { color: displayMode.textColor },
+                                        { color: getDisplayMode(course).textColor },
                                     ]}
                                 >
-                                    {formatPercent(displayMode.percent)}%
+                                    {formatPercent(getDisplayMode(course).percent)}%
                                 </Text>
                             </Pressable>
                         </View>

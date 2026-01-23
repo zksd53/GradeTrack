@@ -152,8 +152,6 @@ export default function HomeScreen({
     ? currentSemester.courses
     : [];
   const [showUpdateAssessment, setShowUpdateAssessment] = useState(false);
-  const activeCourses = currentCourses.length;
-  const creditsThisTerm = currentStats.credits;
   const cumulativeRing = cumulativeGpa === null ? 0 : (cumulativeGpa / 4) * 100;
   const semesterRing =
     currentStats.semesterGpa === null ? 0 : (currentStats.semesterGpa / 4) * 100;
@@ -205,23 +203,6 @@ export default function HomeScreen({
                 : "Semester"
             }
             progress={semesterRing}
-            theme={theme}
-          />
-        </View>
-
-        <View style={styles.miniRow}>
-          <MiniStat
-            icon="book-outline"
-            iconColor="#4F46E5"
-            value={String(creditsThisTerm)}
-            label="this term"
-            theme={theme}
-          />
-          <MiniStat
-            icon="radio-button-on"
-            iconColor="#10B981"
-            value={String(activeCourses)}
-            label="Active"
             theme={theme}
           />
         </View>
@@ -290,20 +271,6 @@ function RingCard({ value, label, progress, theme }) {
     <View style={[styles.ringCard, { backgroundColor: theme.card }]}>
       <ProgressRing value={value} progress={progress} theme={theme} />
       <Text style={[styles.ringLabel, { color: theme.muted }]}>{label}</Text>
-    </View>
-  );
-}
-
-function MiniStat({ icon, iconColor, value, label, theme }) {
-  return (
-    <View style={[styles.miniCard, { backgroundColor: theme.card }]}>
-      <View style={[styles.miniIconWrap, { backgroundColor: theme.cardAlt }]}>
-        <Ionicons name={icon} size={18} color={iconColor} />
-      </View>
-      <View>
-        <Text style={[styles.miniValue, { color: theme.text }]}>{value}</Text>
-        <Text style={[styles.miniLabel, { color: theme.muted }]}>{label}</Text>
-      </View>
     </View>
   );
 }
@@ -464,40 +431,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 10,
     fontWeight: "600",
-  },
-
-  miniRow: {
-    flexDirection: "row",
-    marginTop: 16,
-    marginBottom: 12,
-    gap: 12,
-  },
-  miniCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  miniIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  miniValue: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  miniLabel: {
-    fontSize: 12,
-    marginTop: 2,
   },
 
   sectionRow: {
