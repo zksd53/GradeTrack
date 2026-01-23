@@ -5,9 +5,8 @@ import {
     Pressable,
     SafeAreaView,
     ScrollView,
-    Animated,
 } from "react-native";
-import { useContext, useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import NewAssessmentSheet from "../components/NewAssessmentSheet";
 import EditAssessmentScoreSheet from "../components/EditAssessmentScoreSheet";
@@ -30,8 +29,6 @@ export default function CourseDetailScreen({
     const [showUpdateAssessment, setShowUpdateAssessment] = useState(false);
     const { theme } = useContext(ThemeContext);
     const [circleMode, setCircleMode] = useState("progress");
-    const rotation = useRef(new Animated.Value(0)).current;
-    const rotationStep = useRef(0);
 
     const assessments = Array.isArray(course.assessments)
         ? course.assessments
@@ -113,24 +110,6 @@ export default function CourseDetailScreen({
                     ? "loss"
                     : "progress";
         setCircleMode(nextMode);
-        rotationStep.current += 1;
-        Animated.timing(rotation, {
-            toValue: rotationStep.current,
-            duration: 220,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const rotationStyle = {
-        transform: [
-            {
-                rotate: rotation.interpolate({
-                    inputRange: [0, 1, 2, 3],
-                    outputRange: ["0deg", "120deg", "240deg", "360deg"],
-                    extrapolate: "extend",
-                }),
-            },
-        ],
     };
 
     const openEditScore = (assessment) => {
@@ -148,7 +127,8 @@ export default function CourseDetailScreen({
         );
     };
 
-    const showCurrentGrade = metrics.currentPercent !== null;
+    const showCurrentGrade =
+        metrics.currentPercent !== null && metrics.completedWeight >= 100;
 
     return (
         <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
@@ -207,10 +187,9 @@ export default function CourseDetailScreen({
                             )}
                         </View>
                         <Pressable onPress={handleCirclePress}>
-                            <Animated.View
+                            <View
                                 style={[
                                     styles.progressCircle,
-                                    rotationStyle,
                                     { borderColor: displayMode.color },
                                 ]}
                             >
@@ -222,7 +201,7 @@ export default function CourseDetailScreen({
                                 >
                                     {formatPercent(displayMode.percent)}%
                                 </Text>
-                            </Animated.View>
+                            </View>
                         </Pressable>
                     </View>
 

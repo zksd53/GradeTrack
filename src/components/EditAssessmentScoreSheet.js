@@ -8,8 +8,9 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemeContext } from "../theme";
 
 export default function EditAssessmentScoreSheet({
     visible,
@@ -17,7 +18,17 @@ export default function EditAssessmentScoreSheet({
     onClose,
     onSave,
 }) {
+    const { theme } = useContext(ThemeContext);
     const [score, setScore] = useState("");
+    const inputTheme = useMemo(
+        () => ({
+            backgroundColor: theme.cardAlt,
+            borderColor: theme.border,
+            color: theme.text,
+            placeholderTextColor: theme.muted,
+        }),
+        [theme]
+    );
 
     useEffect(() => {
         if (assessment) {
@@ -45,30 +56,37 @@ export default function EditAssessmentScoreSheet({
                 style={styles.overlay}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
-                <View style={styles.sheet}>
+                <View style={[styles.sheet, { backgroundColor: theme.card }]}>
                     <View style={styles.header}>
-                        <Text style={styles.title}>Edit Score</Text>
+                        <Text style={[styles.title, { color: theme.text }]}>
+                            Edit Score
+                        </Text>
                         <Pressable onPress={onClose}>
-                            <Ionicons name="close" size={22} />
+                            <Ionicons name="close" size={22} color={theme.text} />
                         </Pressable>
                     </View>
 
-                    <Text style={styles.label}>Assessment</Text>
-                    <Text style={styles.value}>
+                    <Text style={[styles.label, { color: theme.muted }]}>
+                        Assessment
+                    </Text>
+                    <Text style={[styles.value, { color: theme.text }]}>
                         {assessment?.name || "Assessment"}
                     </Text>
 
-                    <Text style={styles.label}>Score (%)</Text>
+                    <Text style={[styles.label, { color: theme.muted }]}>
+                        Score (%)
+                    </Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, inputTheme]}
                         placeholder="e.g. 85"
                         keyboardType="numeric"
                         value={score}
                         onChangeText={setScore}
+                        placeholderTextColor={inputTheme.placeholderTextColor}
                     />
 
                     {scoreTooHigh && (
-                        <View style={styles.warning}>
+                        <View style={[styles.warning, { backgroundColor: theme.cardAlt }]}>
                             <Ionicons
                                 name="alert-circle"
                                 size={16}
@@ -83,6 +101,7 @@ export default function EditAssessmentScoreSheet({
                     <Pressable
                         style={[
                             styles.saveBtn,
+                            { backgroundColor: theme.accent },
                             (scoreInvalid || scoreTooHigh) && styles.saveBtnDisabled,
                         ]}
                         onPress={handleSave}
@@ -115,10 +134,9 @@ const styles = StyleSheet.create({
     },
     title: { fontSize: 18, fontWeight: "700" },
     label: { fontSize: 13, fontWeight: "600", marginTop: 10 },
-    value: { fontSize: 14, color: "#111827", marginTop: 6 },
+    value: { fontSize: 14, marginTop: 6 },
     input: {
         borderWidth: 1,
-        borderColor: "#E5E7EB",
         borderRadius: 12,
         padding: 12,
         marginTop: 4,

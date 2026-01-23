@@ -7,7 +7,7 @@ import {
     ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import NewCourseSheet from "../components/NewCourseSheet";
 import { ThemeContext } from "../theme";
 
@@ -20,6 +20,7 @@ export default function SemesterDetailScreen({
 }) {
     const [showDelete, setShowDelete] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
+    const [circleMode, setCircleMode] = useState("progress");
     const { theme } = useContext(ThemeContext);
 
     // ALWAYS derive from props (single source of truth)
@@ -32,6 +33,128 @@ export default function SemesterDetailScreen({
         (sum, c) => sum + (Number(c?.credits) || 0),
         0
     );
+
+    const metrics = useMemo(() => {
+        const assessments = courses.flatMap((course) =>
+            Array.isArray(course.assessments) ? course.assessments : []
+        );
+        const totalWeight = 100;
+        const completedWeight = assessments.reduce(
+            (sum, a) =>
+                sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+            0
+        );
+        const gained = assessments.reduce((sum, a) => {
+            if (typeof a.score !== "number") return sum;
+            const weight = Number(a.weight) || 0;
+            return sum + (weight * a.score) / 100;
+        }, 0);
+        const lost = Math.max(0, completedWeight - gained);
+        const progressRatio =
+            totalWeight > 0 ? completedWeight / totalWeight : 0;
+        const coursesComplete = courses.every((course) => {
+            const courseAssessments = Array.isArray(course.assessments)
+                ? course.assessments
+                : [];
+            const courseCompletedWeight = courseAssessments.reduce(
+                (sum, a) =>
+                    sum +
+                    (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+                0
+            );
+            return courseCompletedWeight >= 100;
+        });
+
+        return {
+            gained,
+            lost,
+            completedWeight,
+            totalWeight,
+            progressRatio,
+            coursesComplete,
+        };
+    }, [courses]);
+
+    const displayMode = {
+        progress: {
+            label: "Progress",
+            percent: metrics.completedWeight,
+            color: "#F59E0B",
+            textColor: "#F59E0B",
+        },
+        gain: {
+            label: "Gained",
+            percent: metrics.gained,
+            color: "#10B981",
+            textColor: "#10B981",
+        },
+        loss: {
+            label: "Lost",
+            percent: metrics.lost,
+            color: "#EF4444",
+            textColor: "#EF4444",
+        },
+    }[circleMode];
+
+    const formatGpa = (value) => {
+        if (value === null || Number.isNaN(value)) return "0.00";
+        return value.toFixed(2);
+    };
+
+    const courseGpa = useMemo(() => {
+        if (courses.length === 0) return null;
+        const weighted = courses.reduce((sum, course) => {
+            const assessments = Array.isArray(course.assessments)
+                ? course.assessments
+                : [];
+            const completedWeight = assessments.reduce(
+                (inner, a) =>
+                    inner + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+                0
+            );
+            const gained = assessments.reduce((inner, a) => {
+                if (typeof a.score !== "number") return inner;
+                const weight = Number(a.weight) || 0;
+                return inner + (weight * a.score) / 100;
+            }, 0);
+            if (completedWeight === 0) return sum;
+            const percent = (gained / completedWeight) * 100;
+            let gpa = 0;
+            if (percent >= 90) gpa = 4.0;
+            else if (percent >= 85) gpa = 3.7;
+            else if (percent >= 80) gpa = 3.3;
+            else if (percent >= 75) gpa = 3.0;
+            else if (percent >= 70) gpa = 2.7;
+            else if (percent >= 65) gpa = 2.3;
+            else if (percent >= 60) gpa = 2.0;
+            else if (percent >= 55) gpa = 1.0;
+            return sum + gpa * (Number(course.credits) || 0);
+        }, 0);
+        const creditTotal = courses.reduce(
+            (sum, course) => sum + (Number(course.credits) || 0),
+            0
+        );
+        if (creditTotal === 0) return null;
+        return weighted / creditTotal;
+    }, [courses]);
+
+    const showGpa = metrics.coursesComplete;
+
+    const formatPercent = (value) => {
+        if (value === null || Number.isNaN(value)) return "0";
+        const rounded = Math.round(value * 10) / 10;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    };
+
+    const handleCirclePress = () => {
+        const nextMode =
+            circleMode === "progress"
+                ? "gain"
+                : circleMode === "gain"
+                    ? "loss"
+                    : "progress";
+        setCircleMode(nextMode);
+    };
 
 
     return (
@@ -64,7 +187,9 @@ export default function SemesterDetailScreen({
                 {/* ---------- GPA Card ---------- */}
                 <View style={[styles.gpaCard, { backgroundColor: theme.card }]}>
                     <View style={[styles.gpaCircle, { borderColor: theme.border }]}>
-                        <Text style={[styles.gpaText, { color: theme.text }]}>0.00</Text>
+                        <Text style={[styles.gpaText, { color: theme.text }]}>
+                            {showGpa ? formatGpa(courseGpa) : "0.00"}
+                        </Text>
                     </View>
                     <Text style={[styles.gpaLabel, { color: theme.muted }]}>
                         Semester GPA
@@ -104,11 +229,22 @@ export default function SemesterDetailScreen({
                         onPress={() => onOpenCourse(course.id)}
                     >
                         <View style={styles.courseLeft}>
-                            <View style={[styles.progressCircle, { borderColor: theme.border }]}>
-                                <Text style={[styles.progressText, { color: theme.text }]}>
-                                    0%
+                            <Pressable
+                                style={[
+                                    styles.progressCircle,
+                                    { borderColor: displayMode.color },
+                                ]}
+                                onPress={handleCirclePress}
+                            >
+                                <Text
+                                    style={[
+                                        styles.progressText,
+                                        { color: displayMode.textColor },
+                                    ]}
+                                >
+                                    {formatPercent(displayMode.percent)}%
                                 </Text>
-                            </View>
+                            </Pressable>
                         </View>
 
                         <View style={styles.courseInfo}>
