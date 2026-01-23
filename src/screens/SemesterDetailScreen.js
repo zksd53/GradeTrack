@@ -148,10 +148,7 @@ export default function SemesterDetailScreen({
         const assessments = Array.isArray(course.assessments)
             ? course.assessments
             : [];
-        const totalWeight = assessments.reduce(
-            (sum, a) => sum + (Number(a.weight) || 0),
-            0
-        );
+        const totalWeight = 100;
         const completedWeight = assessments.reduce(
             (sum, a) =>
                 sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),

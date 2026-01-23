@@ -33,12 +33,12 @@ const getCoursePercent = (course) => {
       sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
     0
   );
+  if (completedWeight < 100) return null;
   const gained = assessments.reduce((sum, a) => {
     if (typeof a.score !== "number") return sum;
     const weight = Number(a.weight) || 0;
     return sum + (weight * a.score) / 100;
   }, 0);
-  if (completedWeight === 0) return null;
   return (gained / completedWeight) * 100;
 };
 
@@ -115,17 +115,12 @@ const getCourseProgress = (course) => {
   const assessments = Array.isArray(course.assessments)
     ? course.assessments
     : [];
-  const totalWeight = assessments.reduce(
-    (sum, a) => sum + (Number(a.weight) || 0),
-    0
-  );
   const completedWeight = assessments.reduce(
     (sum, a) =>
       sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
     0
   );
-  if (totalWeight === 0) return 0;
-  return Math.min(100, (completedWeight / totalWeight) * 100);
+  return Math.min(100, completedWeight);
 };
 
 const getCurrentSemester = (semesters) => {
@@ -551,8 +546,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    borderWidth: 4,
-    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
   },
