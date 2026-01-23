@@ -85,6 +85,49 @@ export default function CourseDetailScreen({
         },
     }[circleMode];
 
+    const ProgressRing = ({ value, progress, color }) => {
+        const progressAngle = Math.min(360, Math.max(0, progress * 3.6));
+        const rightRotation = progressAngle <= 180 ? progressAngle : 180;
+        const leftRotation = progressAngle > 180 ? progressAngle - 180 : 0;
+        return (
+            <View style={styles.ring}>
+                <View style={styles.ringHalf}>
+                    <View
+                        style={[
+                            styles.ringCircle,
+                            styles.ringRight,
+                            { borderColor: color },
+                            {
+                                borderLeftColor: theme.border,
+                                borderBottomColor: theme.border,
+                            },
+                            { transform: [{ rotate: `${rightRotation}deg` }] },
+                        ]}
+                    />
+                </View>
+                <View style={styles.ringHalf}>
+                    <View
+                        style={[
+                            styles.ringCircle,
+                            styles.ringLeft,
+                            { borderColor: color },
+                            {
+                                borderRightColor: theme.border,
+                                borderTopColor: theme.border,
+                            },
+                            { transform: [{ rotate: `${leftRotation}deg` }] },
+                        ]}
+                    />
+                </View>
+                <View style={[styles.ringInner, { backgroundColor: theme.card }]}>
+                    <Text style={[styles.ringValue, { color: theme.text }]}>
+                        {value}
+                    </Text>
+                </View>
+            </View>
+        );
+    };
+
     const formatPercent = (value) => {
         if (value === null || Number.isNaN(value)) return "0";
         const rounded = Math.round(value * 10) / 10;
@@ -200,21 +243,11 @@ export default function CourseDetailScreen({
                             )}
                         </View>
                         <Pressable onPress={handleCirclePress}>
-                            <View
-                                style={[
-                                    styles.progressCircle,
-                                    { borderColor: displayMode.color },
-                                ]}
-                            >
-                                <Text
-                                    style={[
-                                        styles.progressText,
-                                        { color: displayMode.textColor },
-                                    ]}
-                                >
-                                    {formatPercent(displayMode.percent)}%
-                                </Text>
-                            </View>
+                            <ProgressRing
+                                value={`${formatPercent(displayMode.percent)}%`}
+                                progress={displayMode.percent}
+                                color={displayMode.color}
+                            />
                         </Pressable>
                     </View>
 
@@ -412,6 +445,43 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     progressText: { fontSize: 12, fontWeight: "700" },
+    ring: {
+        width: 60,
+        height: 60,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    ringHalf: {
+        position: "absolute",
+        width: 60,
+        height: 60,
+        overflow: "hidden",
+    },
+    ringCircle: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderWidth: 6,
+    },
+    ringRight: {
+        position: "absolute",
+        right: 0,
+    },
+    ringLeft: {
+        position: "absolute",
+        left: 0,
+    },
+    ringInner: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    ringValue: {
+        fontSize: 12,
+        fontWeight: "700",
+    },
 
     divider: {
         height: 1,

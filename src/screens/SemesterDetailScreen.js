@@ -148,6 +148,10 @@ export default function SemesterDetailScreen({
         const assessments = Array.isArray(course.assessments)
             ? course.assessments
             : [];
+        const totalWeight = assessments.reduce(
+            (sum, a) => sum + (Number(a.weight) || 0),
+            0
+        );
         const completedWeight = assessments.reduce(
             (sum, a) =>
                 sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
@@ -159,7 +163,9 @@ export default function SemesterDetailScreen({
             return sum + (weight * a.score) / 100;
         }, 0);
         const lost = Math.max(0, completedWeight - gained);
-        return { completedWeight, gained, lost };
+        const progressPercent =
+            totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
+        return { completedWeight, gained, lost, progressPercent };
     };
 
     const getDisplayMode = (course) => {
@@ -167,7 +173,7 @@ export default function SemesterDetailScreen({
         const courseMetrics = getCourseMetrics(course);
         const mapping = {
             progress: {
-                percent: courseMetrics.completedWeight,
+                percent: courseMetrics.progressPercent,
                 color: "#F59E0B",
                 textColor: "#F59E0B",
             },
@@ -196,6 +202,51 @@ export default function SemesterDetailScreen({
                         : "progress";
             return { ...prev, [courseId]: next };
         });
+    };
+
+    const ProgressRing = ({ value, progress, color, theme }) => {
+        const progressAngle = Math.min(360, Math.max(0, progress * 3.6));
+        const rightRotation = progressAngle <= 180 ? progressAngle : 180;
+        const leftRotation = progressAngle > 180 ? progressAngle - 180 : 0;
+        return (
+            <View style={styles.ring}>
+                <View style={styles.ringHalf}>
+                    <View
+                        style={[
+                            styles.ringCircle,
+                            styles.ringRight,
+                            { borderColor: color },
+                            {
+                                borderLeftColor: theme.border,
+                                borderBottomColor: theme.border,
+                            },
+                            { transform: [{ rotate: `${rightRotation}deg` }] },
+                        ]}
+                    />
+                </View>
+                <View style={styles.ringHalf}>
+                    <View
+                        style={[
+                            styles.ringCircle,
+                            styles.ringLeft,
+                            { borderColor: color },
+                            {
+                                borderRightColor: theme.border,
+                                borderTopColor: theme.border,
+                            },
+                            { transform: [{ rotate: `${leftRotation}deg` }] },
+                        ]}
+                    />
+                </View>
+                <View
+                    style={[styles.ringInner, { backgroundColor: theme.card }]}
+                >
+                    <Text style={[styles.ringValue, { color: theme.text }]}>
+                        {value}
+                    </Text>
+                </View>
+            </View>
+        );
     };
 
 
@@ -272,20 +323,34 @@ export default function SemesterDetailScreen({
                     >
                         <View style={styles.courseLeft}>
                             <Pressable
-                                style={[
-                                    styles.progressCircle,
-                                    { borderColor: getDisplayMode(course).color },
-                                ]}
                                 onPress={() => handleCirclePress(course.id)}
                             >
-                                <Text
-                                    style={[
-                                        styles.progressText,
-                                        { color: getDisplayMode(course).textColor },
-                                    ]}
-                                >
-                                    {formatPercent(getDisplayMode(course).percent)}%
-                                </Text>
+                                {getDisplayMode(course).percent <= 0 ? (
+                                    <View
+                                        style={[
+                                            styles.progressCircle,
+                                            { borderColor: theme.border },
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.progressText,
+                                                { color: theme.text },
+                                            ]}
+                                        >
+                                            0%
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <ProgressRing
+                                        value={`${formatPercent(
+                                            getDisplayMode(course).percent
+                                        )}%`}
+                                        progress={getDisplayMode(course).percent}
+                                        color={getDisplayMode(course).color}
+                                        theme={theme}
+                                    />
+                                )}
                             </Pressable>
                         </View>
 
@@ -483,6 +548,44 @@ const styles = StyleSheet.create({
 
     progressText: {
         fontSize: 12,
+        fontWeight: "700",
+    },
+
+    ring: {
+        width: 44,
+        height: 44,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    ringHalf: {
+        position: "absolute",
+        width: 44,
+        height: 44,
+        overflow: "hidden",
+    },
+    ringCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 4,
+    },
+    ringRight: {
+        position: "absolute",
+        right: 0,
+    },
+    ringLeft: {
+        position: "absolute",
+        left: 0,
+    },
+    ringInner: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    ringValue: {
+        fontSize: 11,
         fontWeight: "700",
     },
 

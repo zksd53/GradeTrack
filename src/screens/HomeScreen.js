@@ -323,6 +323,15 @@ function CourseCard({
 }
 
 function ProgressRing({ value, progress, theme }) {
+  if (progress <= 0) {
+    return (
+      <View style={styles.ring}>
+        <View style={[styles.ringInner, { backgroundColor: theme.card }]}>
+          <Text style={[styles.ringValue, { color: theme.text }]}>{value}</Text>
+        </View>
+      </View>
+    );
+  }
   const progressAngle = Math.min(360, Math.max(0, progress * 3.6));
   const rightRotation = progressAngle <= 180 ? progressAngle : 180;
   const leftRotation = progressAngle > 180 ? progressAngle - 180 : 0;
@@ -542,6 +551,8 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
+    borderWidth: 4,
+    borderColor: "#E2E8F0",
     alignItems: "center",
     justifyContent: "center",
   },
