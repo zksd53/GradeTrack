@@ -23,6 +23,7 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
     const [notes, setNotes] = useState("");
     const [gradeDistGrade, setGradeDistGrade] = useState("A");
     const [gradeDistValue, setGradeDistValue] = useState("");
+    const [gradeDistributions, setGradeDistributions] = useState([]);
     const [showGradeDropdown, setShowGradeDropdown] = useState(false);
     const [touched, setTouched] = useState({
         name: false,
@@ -42,7 +43,7 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
         }),
         [theme]
     );
-    const gradeOptions = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-"];
+    const gradeOptions = ["A+", "A", "B+", "B", "C+", "C"];
 
     const handleCreate = () => {
         const trimmedName = name.trim();
@@ -51,6 +52,27 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
             ? Number(credits)
             : 0;
         if (!trimmedName) return;
+
+        const distribution =
+            gradeDistValue !== ""
+                ? (() => {
+                    const existingIndex = gradeDistributions.findIndex(
+                        (item) => item.grade === gradeDistGrade
+                    );
+                    if (existingIndex >= 0) {
+                        const next = [...gradeDistributions];
+                        next[existingIndex] = {
+                            grade: gradeDistGrade,
+                            value: gradeDistValue,
+                        };
+                        return next;
+                    }
+                    return [
+                        ...gradeDistributions,
+                        { grade: gradeDistGrade, value: gradeDistValue },
+                    ];
+                })()
+                : gradeDistributions;
 
         onCreate({
             id: Date.now().toString(),
@@ -63,6 +85,7 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
                 grade: gradeDistGrade,
                 value: gradeDistValue,
             },
+            gradeDistributions: distribution,
             notes,
             grade: null,
             assessments: [],
@@ -77,6 +100,7 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
         setNotes("");
         setGradeDistGrade("A");
         setGradeDistValue("");
+        setGradeDistributions([]);
         setShowGradeDropdown(false);
         onClose();
     };
@@ -200,6 +224,48 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
                                 placeholderTextColor={inputTheme.placeholderTextColor}
                             />
                         </View>
+                        <Pressable
+                            style={[styles.addDistButton, { backgroundColor: theme.cardAlt }]}
+                            onPress={() => {
+                                if (!gradeDistValue) return;
+                                setGradeDistributions((prev) => {
+                                    const existingIndex = prev.findIndex(
+                                        (item) => item.grade === gradeDistGrade
+                                    );
+                                    if (existingIndex >= 0) {
+                                        const next = [...prev];
+                                        next[existingIndex] = {
+                                            grade: gradeDistGrade,
+                                            value: gradeDistValue,
+                                        };
+                                        return next;
+                                    }
+                                    return [
+                                        ...prev,
+                                        { grade: gradeDistGrade, value: gradeDistValue },
+                                    ];
+                                });
+                                setGradeDistValue("");
+                            }}
+                        >
+                            <Text style={[styles.addDistText, { color: theme.text }]}>
+                                Add Grade
+                            </Text>
+                        </Pressable>
+                        {gradeDistributions.length > 0 && (
+                            <View style={styles.gradeList}>
+                                {gradeDistributions.map((item, index) => (
+                                    <View
+                                        key={`${item.grade}-${index}`}
+                                        style={[styles.gradeChip, { backgroundColor: theme.cardAlt }]}
+                                    >
+                                        <Text style={[styles.gradeChipText, { color: theme.text }]}>
+                                            {item.grade}: {item.value}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
                         {showGradeDropdown && (
                             <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
                                 {gradeOptions.map((item) => (
@@ -312,6 +378,32 @@ const styles = StyleSheet.create({
     gradeInput: {
         flex: 1,
         marginTop: 0,
+    },
+    addDistButton: {
+        marginTop: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        alignItems: "center",
+    },
+    addDistText: {
+        fontSize: 13,
+        fontWeight: "600",
+    },
+    gradeList: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+        marginTop: 10,
+    },
+    gradeChip: {
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 999,
+    },
+    gradeChipText: {
+        fontSize: 12,
+        fontWeight: "600",
     },
     notes: { height: 80 },
     createBtn: {

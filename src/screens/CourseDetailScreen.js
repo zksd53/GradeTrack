@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import NewAssessmentSheet from "../components/NewAssessmentSheet";
 import EditAssessmentScoreSheet from "../components/EditAssessmentScoreSheet";
 import UpdateAssessmentSheet from "../components/UpdateAssessmentSheet";
+import EditGradeDistributionSheet from "../components/EditGradeDistributionSheet";
 import { ThemeContext } from "../theme";
 
 export default function CourseDetailScreen({
@@ -22,11 +23,13 @@ export default function CourseDetailScreen({
     onAddAssessment,
     onUpdateAssessment,
     onDeleteAssessment,
+    onUpdateCourse,
 }) {
     const [showAddAssessment, setShowAddAssessment] = useState(false);
     const [editingAssessment, setEditingAssessment] = useState(null);
     const [showEditScore, setShowEditScore] = useState(false);
     const [showUpdateAssessment, setShowUpdateAssessment] = useState(false);
+    const [showGradeDistribution, setShowGradeDistribution] = useState(false);
     const { theme } = useContext(ThemeContext);
     const [circleMode, setCircleMode] = useState("progress");
 
@@ -167,6 +170,16 @@ export default function CourseDetailScreen({
                                 Target: {course.targetGrade || "—"}
                             </Text>
                         </View>
+                        <Pressable
+                            style={[styles.badge, styles.badgeIcon, { backgroundColor: theme.cardAlt }]}
+                            onPress={() => setShowGradeDistribution(true)}
+                        >
+                            <Ionicons
+                                name="pie-chart-outline"
+                                size={14}
+                                color={theme.text}
+                            />
+                        </Pressable>
                     </View>
 
                     <View style={styles.summaryRow}>
@@ -321,6 +334,16 @@ export default function CourseDetailScreen({
                     })
                 }
             />
+            <EditGradeDistributionSheet
+                visible={showGradeDistribution}
+                onClose={() => setShowGradeDistribution(false)}
+                distributions={course.gradeDistributions || []}
+                onSave={(items) =>
+                    onUpdateCourse(semesterId, course.id, {
+                        gradeDistributions: items,
+                    })
+                }
+            />
         </SafeAreaView>
     );
 }
@@ -364,6 +387,11 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
     },
     badgeAccentText: { fontSize: 12, fontWeight: "600", color: "#B45309" },
+    badgeIcon: {
+        width: 90,
+        justifyContent: "center",
+        alignItems: "center",
+    },
 
     summaryRow: {
         flexDirection: "row",

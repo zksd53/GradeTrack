@@ -156,6 +156,22 @@ export default function Root() {
                                     )
                         );
                     }}
+                    onUpdateCourse={(semesterId, courseId, updates) => {
+                        saveSemesters((prev) =>
+                            prev.map((s) =>
+                                s.id === semesterId
+                                    ? {
+                                        ...s,
+                                        courses: (s.courses || []).map((c) =>
+                                            c.id === courseId
+                                                ? { ...c, ...updates }
+                                                : c
+                                        ),
+                                    }
+                                    : s
+                            )
+                        );
+                    }}
                     onDeleteAssessment={(semesterId, courseId, assessmentId) => {
                         saveSemesters((prev) =>
                             prev.map((s) =>
