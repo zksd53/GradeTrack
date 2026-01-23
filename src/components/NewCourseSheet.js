@@ -21,6 +21,9 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
     const [instructor, setInstructor] = useState("");
     const [targetGrade, setTargetGrade] = useState("");
     const [notes, setNotes] = useState("");
+    const [gradeDistGrade, setGradeDistGrade] = useState("A");
+    const [gradeDistValue, setGradeDistValue] = useState("");
+    const [showGradeDropdown, setShowGradeDropdown] = useState(false);
     const [touched, setTouched] = useState({
         name: false,
         code: false,
@@ -39,6 +42,7 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
         }),
         [theme]
     );
+    const gradeOptions = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-"];
 
     const handleCreate = () => {
         const trimmedName = name.trim();
@@ -55,6 +59,10 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
             credits: safeCredits,
             instructor,
             targetGrade,
+            gradeDistribution: {
+                grade: gradeDistGrade,
+                value: gradeDistValue,
+            },
             notes,
             grade: null,
             assessments: [],
@@ -67,6 +75,9 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
         setInstructor("");
         setTargetGrade("");
         setNotes("");
+        setGradeDistGrade("A");
+        setGradeDistValue("");
+        setShowGradeDropdown(false);
         onClose();
     };
 
@@ -168,6 +179,47 @@ export default function NewCourseSheet({ visible, onClose, onCreate }) {
                         />
 
                         <Text style={[styles.label, { color: theme.muted }]}>
+                            Grade Distribution
+                        </Text>
+                        <View style={styles.gradeRow}>
+                            <Pressable
+                                style={[styles.select, styles.gradeSelect, inputTheme]}
+                                onPress={() => setShowGradeDropdown(!showGradeDropdown)}
+                            >
+                                <Text style={[styles.selectText, { color: theme.text }]}>
+                                    {gradeDistGrade}
+                                </Text>
+                                <Ionicons name="chevron-down" size={18} color={theme.muted} />
+                            </Pressable>
+                            <TextInput
+                                style={[styles.input, styles.gradeInput, inputTheme]}
+                                placeholder="Value"
+                                keyboardType="numeric"
+                                value={gradeDistValue}
+                                onChangeText={setGradeDistValue}
+                                placeholderTextColor={inputTheme.placeholderTextColor}
+                            />
+                        </View>
+                        {showGradeDropdown && (
+                            <View style={[styles.dropdown, { backgroundColor: theme.card }]}>
+                                {gradeOptions.map((item) => (
+                                    <Pressable
+                                        key={item}
+                                        style={styles.dropdownItem}
+                                        onPress={() => {
+                                            setGradeDistGrade(item);
+                                            setShowGradeDropdown(false);
+                                        }}
+                                    >
+                                        <Text style={[styles.dropdownText, { color: theme.text }]}>
+                                            {item}
+                                        </Text>
+                                    </Pressable>
+                                ))}
+                            </View>
+                        )}
+
+                        <Text style={[styles.label, { color: theme.muted }]}>
                             Notes
                         </Text>
                         <TextInput
@@ -224,6 +276,42 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 12,
         marginTop: 4,
+    },
+    select: {
+        borderWidth: 1,
+        borderRadius: 12,
+        padding: 12,
+        marginTop: 4,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    selectText: { fontSize: 14, fontWeight: "500" },
+    dropdown: {
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        borderRadius: 12,
+        marginTop: 6,
+        overflow: "hidden",
+    },
+    dropdownItem: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#F3F4F6",
+    },
+    dropdownText: { fontSize: 14, fontWeight: "500" },
+    gradeRow: {
+        flexDirection: "row",
+        gap: 10,
+        marginTop: 4,
+    },
+    gradeSelect: {
+        flex: 1,
+        marginTop: 0,
+    },
+    gradeInput: {
+        flex: 1,
+        marginTop: 0,
     },
     notes: { height: 80 },
     createBtn: {

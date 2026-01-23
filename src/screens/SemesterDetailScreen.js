@@ -96,7 +96,7 @@ export default function SemesterDetailScreen({
                 const weight = Number(a.weight) || 0;
                 return inner + (weight * a.score) / 100;
             }, 0);
-            if (completedWeight === 0) return sum;
+            if (completedWeight < 100) return sum;
             const percent = (gained / completedWeight) * 100;
             let gpa = 0;
             if (percent >= 90) gpa = 4.0;
@@ -109,15 +109,34 @@ export default function SemesterDetailScreen({
             else if (percent >= 55) gpa = 1.0;
             return sum + gpa * (Number(course.credits) || 0);
         }, 0);
-        const creditTotal = courses.reduce(
-            (sum, course) => sum + (Number(course.credits) || 0),
-            0
-        );
+        const creditTotal = courses.reduce((sum, course) => {
+            const assessments = Array.isArray(course.assessments)
+                ? course.assessments
+                : [];
+            const completedWeight = assessments.reduce(
+                (inner, a) =>
+                    inner +
+                    (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+                0
+            );
+            if (completedWeight < 100) return sum;
+            return sum + (Number(course.credits) || 0);
+        }, 0);
         if (creditTotal === 0) return null;
         return weighted / creditTotal;
     }, [courses]);
 
-    const showGpa = metrics.coursesComplete;
+    const showGpa = courses.some((course) => {
+        const courseAssessments = Array.isArray(course.assessments)
+            ? course.assessments
+            : [];
+        const courseCompletedWeight = courseAssessments.reduce(
+            (sum, a) =>
+                sum + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+            0
+        );
+        return courseCompletedWeight >= 100;
+    });
 
     const formatPercent = (value) => {
         if (value === null || Number.isNaN(value)) return "0";

@@ -96,13 +96,61 @@ function SemesterCard({
     0
   );
 
+  const semesterGpa = (() => {
+    const weighted = safeCourses.reduce((sum, course) => {
+      const assessments = Array.isArray(course.assessments)
+        ? course.assessments
+        : [];
+      const completedWeight = assessments.reduce(
+        (inner, a) =>
+          inner + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+        0
+      );
+      if (completedWeight < 100) return sum;
+      const gained = assessments.reduce((inner, a) => {
+        if (typeof a.score !== "number") return inner;
+        const weight = Number(a.weight) || 0;
+        return inner + (weight * a.score) / 100;
+      }, 0);
+      const percent = completedWeight > 0 ? (gained / completedWeight) * 100 : 0;
+      let courseGpa = 0;
+      if (percent >= 90) courseGpa = 4.0;
+      else if (percent >= 85) courseGpa = 3.7;
+      else if (percent >= 80) courseGpa = 3.3;
+      else if (percent >= 75) courseGpa = 3.0;
+      else if (percent >= 70) courseGpa = 2.7;
+      else if (percent >= 65) courseGpa = 2.3;
+      else if (percent >= 60) courseGpa = 2.0;
+      else if (percent >= 55) courseGpa = 1.0;
+      return sum + courseGpa * (Number(course.credits) || 0);
+    }, 0);
+
+    const creditTotal = safeCourses.reduce((sum, course) => {
+      const assessments = Array.isArray(course.assessments)
+        ? course.assessments
+        : [];
+      const completedWeight = assessments.reduce(
+        (inner, a) =>
+          inner + (typeof a.score === "number" ? Number(a.weight) || 0 : 0),
+        0
+      );
+      if (completedWeight < 100) return sum;
+      return sum + (Number(course.credits) || 0);
+    }, 0);
+
+    if (creditTotal === 0) return "0.00";
+    return (weighted / creditTotal).toFixed(2);
+  })();
+
   return (
     <Pressable
       style={[styles.card, { backgroundColor: theme.card }]}
       onPress={onPress}
     >
       <View style={styles.gpaCircle}>
-        <Text style={[styles.gpaText, { color: theme.text }]}>{gpa}</Text>
+        <Text style={[styles.gpaText, { color: theme.text }]}>
+          {semesterGpa}
+        </Text>
       </View>
 
       <View style={styles.info}>
