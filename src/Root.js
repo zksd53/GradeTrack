@@ -2,8 +2,15 @@ import { View, StyleSheet, Animated } from "react-native";
 import { useState, useEffect, useMemo, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ThemeContext, themes } from "./theme";
-import { auth } from "./firebase";
+import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import {
+    doc,
+    getDoc,
+    onSnapshot,
+    serverTimestamp,
+    setDoc,
+} from "firebase/firestore";
 
 // Screens
 import HomeScreen from "./screens/HomeScreen";
@@ -32,28 +39,70 @@ export default function Root() {
     const [showSplash, setShowSplash] = useState(true);
     const splashOpacity = useRef(new Animated.Value(1)).current;
 
+    const normalizeSemesters = (data) => {
+        if (!Array.isArray(data)) return [];
+        return data.map((semester) => ({
+            ...semester,
+            courses: Array.isArray(semester.courses) ? semester.courses : [],
+        }));
+    };
+
+    const getStorageKey = (uid) => (uid ? `${STORAGE_KEY}_${uid}` : STORAGE_KEY);
+
     useEffect(() => {
-        const load = async () => {
-            const stored = await AsyncStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                const normalized = Array.isArray(parsed)
-                    ? parsed.map((semester) => ({
-                        ...semester,
-                        courses: Array.isArray(semester.courses)
-                            ? semester.courses
-                            : [],
-                    }))
-                    : [];
-                setSemesters(normalized);
-            }
+        const loadTheme = async () => {
             const storedTheme = await AsyncStorage.getItem(THEME_KEY);
             if (storedTheme !== null) {
                 setDarkMode(storedTheme === "true");
             }
         };
-        load();
+        loadTheme();
     }, []);
+
+    useEffect(() => {
+        let unsubscribe = null;
+        const loadUserData = async () => {
+            if (!authUser) {
+                setSemesters([]);
+                return;
+            }
+            const storageKey = getStorageKey(authUser.uid);
+            const stored = await AsyncStorage.getItem(storageKey);
+            const localSemesters = normalizeSemesters(
+                stored ? JSON.parse(stored) : []
+            );
+
+            const docRef = doc(db, "users", authUser.uid);
+            const snapshot = await getDoc(docRef);
+            if (snapshot.exists() && Array.isArray(snapshot.data().semesters)) {
+                const remote = normalizeSemesters(snapshot.data().semesters);
+                setSemesters(remote);
+                await AsyncStorage.setItem(storageKey, JSON.stringify(remote));
+            } else if (localSemesters.length) {
+                setSemesters(localSemesters);
+                await setDoc(
+                    docRef,
+                    { semesters: localSemesters, updatedAt: serverTimestamp() },
+                    { merge: true }
+                );
+            } else {
+                setSemesters([]);
+            }
+
+            unsubscribe = onSnapshot(docRef, (liveSnap) => {
+                if (!liveSnap.exists()) return;
+                const data = liveSnap.data();
+                if (!Array.isArray(data.semesters)) return;
+                const remote = normalizeSemesters(data.semesters);
+                setSemesters(remote);
+                AsyncStorage.setItem(storageKey, JSON.stringify(remote));
+            });
+        };
+        loadUserData();
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [authUser]);
 
     useEffect(() => {
         AsyncStorage.setItem(THEME_KEY, darkMode ? "true" : "false");
@@ -75,7 +124,15 @@ export default function Root() {
     const saveSemesters = async (updater) => {
         setSemesters((prev) => {
             const updated = typeof updater === "function" ? updater(prev) : updater;
-            AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            const storageKey = getStorageKey(authUser?.uid);
+            AsyncStorage.setItem(storageKey, JSON.stringify(updated));
+            if (authUser) {
+                setDoc(
+                    doc(db, "users", authUser.uid),
+                    { semesters: updated, updatedAt: serverTimestamp() },
+                    { merge: true }
+                );
+            }
             return updated;
         });
     };
