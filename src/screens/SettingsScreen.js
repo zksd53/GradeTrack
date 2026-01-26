@@ -12,11 +12,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { useContext, useMemo, useState } from "react";
 import { ThemeContext } from "../theme";
 
-export default function SettingsScreen({ semesters = [], onClearAll }) {
+export default function SettingsScreen({
+  semesters = [],
+  user,
+  onClearAll,
+  onSignOut,
+}) {
   const { darkMode, setDarkMode, theme } = useContext(ThemeContext);
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const displayName =
+    user?.displayName?.trim() ||
+    (user?.email ? user.email.split("@")[0] : "GradeTrack User");
+  const displayEmail = user?.email || "Not signed in";
+  const avatarLetter = displayName ? displayName[0]?.toUpperCase() : "G";
 
   const stats = useMemo(() => {
     const semestersCount = semesters.length;
@@ -43,14 +53,16 @@ export default function SettingsScreen({ semesters = [], onClearAll }) {
         <Text style={[styles.header, { color: theme.text }]}>Settings</Text>
 
         <View style={[styles.card, { backgroundColor: theme.card }]}> 
-          <View style={[styles.avatar, { backgroundColor: theme.accent }]}> 
-            <Text style={styles.avatarText}>Z</Text>
+          <View style={[styles.avatar, { backgroundColor: theme.accent }]}>
+            <Text style={styles.avatarText}>{avatarLetter}</Text>
           </View>
 
           <View>
-            <Text style={[styles.name, { color: theme.text }]}>Zaki Saud</Text>
-            <Text style={[styles.email, { color: theme.muted }]}> 
-              zakisaud2023@gmail.com
+            <Text style={[styles.name, { color: theme.text }]}>
+              {displayName}
+            </Text>
+            <Text style={[styles.email, { color: theme.muted }]}>
+              {displayEmail}
             </Text>
 
             <View style={styles.badge}>
@@ -246,7 +258,13 @@ export default function SettingsScreen({ semesters = [], onClearAll }) {
               </Text>
             </View>
           )}
-          <Row icon="log-out-outline" title="Sign Out" theme={theme} last />
+          <Row
+            icon="log-out-outline"
+            title="Sign Out"
+            theme={theme}
+            onPress={onSignOut}
+            last
+          />
         </Section>
       </ScrollView>
       <ConfirmModal
