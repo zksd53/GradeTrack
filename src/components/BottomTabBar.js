@@ -30,6 +30,14 @@ export default function BottomTabBar({ activeTab, setActiveTab, height }) {
                 />
 
                 <Tab
+                    label="Analytics"
+                    icon="stats-chart"
+                    active={activeTab === "analytics"}
+                    onPress={() => setActiveTab("analytics")}
+                    theme={theme}
+                />
+
+                <Tab
                     label="Settings"
                     icon="settings"
                     active={activeTab === "settings"}

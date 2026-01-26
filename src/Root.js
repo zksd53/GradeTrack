@@ -18,6 +18,7 @@ import SemestersScreen from "./screens/SemestersScreen";
 import SemesterDetailScreen from "./screens/SemesterDetailScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import CourseDetailScreen from "./screens/CourseDetailScreen";
+import AnalyticsScreen from "./screens/AnalyticsScreen";
 import AuthScreen from "./screens/AuthScreen";
 import SplashScreen from "./screens/SplashScreen";
 
@@ -158,6 +159,7 @@ export default function Root() {
     const transition = useRef(new Animated.Value(0)).current;
     const currentScreenKey = useMemo(() => {
         if (activeTab === "home") return "home";
+        if (activeTab === "analytics") return "analytics";
         if (activeTab === "settings") return "settings";
         if (activeTab === "semesters") {
             if (selectedCourse) return `course-${selectedCourse.id}`;
@@ -434,6 +436,8 @@ export default function Root() {
                             onSignOut={() => signOut(auth)}
                         />
                     )}
+
+                    {activeTab === "analytics" && <AnalyticsScreen />}
                 </Animated.View>
 
                 <BottomTabBar
