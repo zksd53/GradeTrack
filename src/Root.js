@@ -28,6 +28,9 @@ export default function Root() {
     const [darkMode, setDarkMode] = useState(false);
     const [authUser, setAuthUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
+    const [splashReady, setSplashReady] = useState(false);
+    const [showSplash, setShowSplash] = useState(true);
+    const splashOpacity = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
         const load = async () => {
@@ -57,11 +60,15 @@ export default function Root() {
     }, [darkMode]);
 
     useEffect(() => {
+        const timer = setTimeout(() => setSplashReady(true), 1400);
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setAuthUser(user);
             setAuthLoading(false);
         });
-        return unsubscribe;
+        return () => {
+            clearTimeout(timer);
+            unsubscribe();
+        };
     }, []);
 
     // ✅ SAFE state update
@@ -112,15 +119,23 @@ export default function Root() {
         }).start();
     }, [currentScreenKey, transition]);
 
-    if (authLoading) {
+    useEffect(() => {
+        if (authLoading || !splashReady || !showSplash) return;
+        const timer = setTimeout(() => {
+            Animated.timing(splashOpacity, {
+                toValue: 0,
+                duration: 600,
+                useNativeDriver: true,
+            }).start(() => setShowSplash(false));
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [authLoading, splashReady, showSplash, splashOpacity]);
+
+    if (authLoading || !splashReady) {
         return <SplashScreen />;
     }
 
-    if (!authUser) {
-        return <AuthScreen />;
-    }
-
-    return (
+    const appContent = authUser ? (
         <ThemeContext.Provider value={{ darkMode, setDarkMode, theme }}>
             <View style={[styles.container, { backgroundColor: theme.background }]}>
                 <Animated.View
@@ -370,10 +385,31 @@ export default function Root() {
                 />
             </View>
         </ThemeContext.Provider>
+    ) : (
+        <AuthScreen />
+    );
+
+    return (
+        <View style={styles.root}>
+            {appContent}
+            {showSplash && (
+                <Animated.View
+                    style={[
+                        StyleSheet.absoluteFillObject,
+                        { opacity: splashOpacity },
+                    ]}
+                >
+                    <SplashScreen />
+                </Animated.View>
+            )}
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    root: {
+        flex: 1,
+    },
     container: {
         flex: 1,
         backgroundColor: "#969cb1ff",

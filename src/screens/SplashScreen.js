@@ -4,16 +4,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 export default function SplashScreen() {
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.brandRow}>
-          <Text style={styles.brandText}>GradeTrack</Text>
-          <View style={styles.iconBadge}>
-            <MaterialCommunityIcons
-              name="pencil-ruler"
-              size={28}
-              color="#FFFFFF"
-            />
-          </View>
+      <View style={styles.brandRow}>
+        <Text style={styles.brandText}>GradeTrack</Text>
+        <View style={styles.iconBadge}>
+          <MaterialCommunityIcons
+            name="pencil-ruler"
+            size={14}
+            color="#FFFFFF"
+          />
         </View>
       </View>
     </View>
@@ -27,16 +25,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  card: {
-    width: "86%",
-    maxWidth: 420,
-    height: 380,
-    borderRadius: 28,
-    backgroundColor: "#303446",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
   brandRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -44,14 +32,14 @@ const styles = StyleSheet.create({
   },
   brandText: {
     color: "#F4B35E",
-    fontSize: 36,
+    fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.3,
   },
   iconBadge: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 27,
+    height: 27,
+    borderRadius: 13.5,
     backgroundColor: "#4A4E60",
     alignItems: "center",
     justifyContent: "center",

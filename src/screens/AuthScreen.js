@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from "react-native";
 import {
   createUserWithEmailAndPassword,
@@ -21,6 +22,15 @@ export default function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
 
   const handleSubmit = async () => {
     setError("");
@@ -47,7 +57,7 @@ export default function AuthScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.card}>
+      <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
         <Text style={styles.title}>
           {mode === "login" ? "Welcome back" : "Create account"}
         </Text>
@@ -106,7 +116,7 @@ export default function AuthScreen() {
               : "Already have an account? Log in"}
           </Text>
         </Pressable>
-      </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
