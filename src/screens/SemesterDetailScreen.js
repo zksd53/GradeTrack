@@ -664,6 +664,3 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
 });
-
-// Main functionality is document. What's left
-// 1. Email/signup - using JWT which should represent in the setting's tab that's it

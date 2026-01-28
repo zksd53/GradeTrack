@@ -38,6 +38,7 @@ export default function Root() {
     const [authLoading, setAuthLoading] = useState(true);
     const [splashReady, setSplashReady] = useState(false);
     const [showSplash, setShowSplash] = useState(true);
+    const [billing, setBilling] = useState(null);
     const splashOpacity = useRef(new Animated.Value(1)).current;
 
     const normalizeSemesters = (data) => {
@@ -65,6 +66,7 @@ export default function Root() {
         const loadUserData = async () => {
             if (!authUser) {
                 setSemesters([]);
+                setBilling(null);
                 return;
             }
             const storageKey = getStorageKey(authUser.uid);
@@ -76,11 +78,14 @@ export default function Root() {
             const docRef = doc(db, "users", authUser.uid);
             const snapshot = await getDoc(docRef);
             if (snapshot.exists() && Array.isArray(snapshot.data().semesters)) {
-                const remote = normalizeSemesters(snapshot.data().semesters);
+                const data = snapshot.data();
+                const remote = normalizeSemesters(data.semesters);
                 setSemesters(remote);
+                setBilling(data.billing || null);
                 await AsyncStorage.setItem(storageKey, JSON.stringify(remote));
             } else if (localSemesters.length) {
                 setSemesters(localSemesters);
+                setBilling(null);
                 await setDoc(
                     docRef,
                     { semesters: localSemesters, updatedAt: serverTimestamp() },
@@ -88,6 +93,7 @@ export default function Root() {
                 );
             } else {
                 setSemesters([]);
+                setBilling(null);
             }
 
             unsubscribe = onSnapshot(docRef, (liveSnap) => {
@@ -96,6 +102,7 @@ export default function Root() {
                 if (!Array.isArray(data.semesters)) return;
                 const remote = normalizeSemesters(data.semesters);
                 setSemesters(remote);
+                setBilling(data.billing || null);
                 AsyncStorage.setItem(storageKey, JSON.stringify(remote));
             });
         };
@@ -299,6 +306,7 @@ export default function Root() {
                     {activeTab === "semesters" && !selectedSemester && (
                         <SemestersScreen
                             semesters={semesters}
+                            billing={billing}
                             saveSemesters={saveSemesters}
                             onOpenSemester={(id) => {
                                 setSelectedSemesterId(id);
@@ -430,6 +438,7 @@ export default function Root() {
                         <SettingsScreen
                             semesters={semesters}
                             user={authUser}
+                            billing={billing}
                             onClearAll={() => {
                                 saveSemesters([]);
                             }}

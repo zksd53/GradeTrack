@@ -5,6 +5,7 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext, useState } from "react";
@@ -17,6 +18,7 @@ import NewSemesterSheet from "../components/NewSemesterSheet";
 
 export default function SemestersScreen({
   semesters,
+  billing,
   saveSemesters,
   onOpenSemester,
 }) {
@@ -26,6 +28,9 @@ export default function SemestersScreen({
   console.log("SemestersScreen render. semesters:", semesters);
 
   /* ---------- Handlers ---------- */
+
+  const isPro = billing?.status === "active";
+  const canAddSemester = isPro || semesters.length < 3;
 
   const handleAddSemester = (newSemester) => {
     console.log("Adding semester:", newSemester);
@@ -46,7 +51,16 @@ export default function SemestersScreen({
 
         <Pressable
           style={[styles.addButton, { backgroundColor: theme.accent }]}
-          onPress={() => setShowNewSemester(true)}
+          onPress={() => {
+            if (!canAddSemester) {
+              Alert.alert(
+                "Upgrade required",
+                "Free plan supports up to 3 semesters. Upgrade to Pro for unlimited semesters."
+              );
+              return;
+            }
+            setShowNewSemester(true);
+          }}
         >
           <Ionicons name="add" size={20} color="#FFF" />
           <Text style={styles.addText}>Add New Semester</Text>
@@ -69,11 +83,11 @@ export default function SemestersScreen({
         ))}
       </ScrollView>
 
-      <NewSemesterSheet
-        visible={showNewSemester}
-        onClose={() => setShowNewSemester(false)}
-        onCreate={handleAddSemester}
-      />
+        <NewSemesterSheet
+          visible={showNewSemester}
+          onClose={() => setShowNewSemester(false)}
+          onCreate={handleAddSemester}
+        />
     </SafeAreaView>
   );
 }

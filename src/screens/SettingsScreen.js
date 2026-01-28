@@ -7,14 +7,18 @@ import {
   SafeAreaView,
   ScrollView,
   Linking,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext, useMemo, useState } from "react";
 import { ThemeContext } from "../theme";
+import { auth, functions } from "../firebase";
+import { httpsCallable } from "firebase/functions";
 
 export default function SettingsScreen({
   semesters = [],
   user,
+  billing,
   onClearAll,
   onSignOut,
 }) {
@@ -22,11 +26,55 @@ export default function SettingsScreen({
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(null);
   const displayName =
     user?.displayName?.trim() ||
     (user?.email ? user.email.split("@")[0] : "GradeTrack User");
   const displayEmail = user?.email || "Not signed in";
   const avatarLetter = displayName ? displayName[0]?.toUpperCase() : "G";
+  const planLabel = (() => {
+    if (billing?.status === "active") {
+      if (billing.plan === "monthly") return "Pro (Monthly)";
+      if (billing.plan === "4month") return "Pro (4-Month)";
+      return "Pro";
+    }
+    return "Free";
+  })();
+  const planStatus = billing?.status === "active" ? "Active" : "Free";
+
+  const handleUpgrade = async (plan) => {
+    if (!auth.currentUser) {
+      Alert.alert("Sign in required", "Please sign in to upgrade.");
+      return;
+    }
+    try {
+      setUpgradeLoading(plan);
+      const createCheckoutSession = httpsCallable(
+        functions,
+        "createCheckoutSession"
+      );
+      const response = await Promise.race([
+        createCheckoutSession({ plan }),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Request timed out. Please try again.")),
+            12000
+          )
+        ),
+      ]);
+      const url = response?.data?.url;
+      if (!url) {
+        Alert.alert("Error", "Unable to start checkout.");
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (error) {
+      Alert.alert("Error", error?.message || "Checkout failed.");
+    } finally {
+      setUpgradeLoading(null);
+    }
+  };
 
   const stats = useMemo(() => {
     const semestersCount = semesters.length;
@@ -103,6 +151,175 @@ export default function SettingsScreen({
             theme={theme}
             last
           />
+        </Section>
+
+        <Section title="PLANS" theme={theme}>
+          <View style={[styles.currentPlan, { backgroundColor: theme.card }]}>
+            <View>
+              <Text style={[styles.currentPlanLabel, { color: theme.muted }]}>
+                Current Plan
+              </Text>
+              <Text style={[styles.currentPlanValue, { color: theme.text }]}>
+                {planLabel}
+              </Text>
+            </View>
+            <View style={[styles.planStatus, { backgroundColor: theme.cardAlt }]}>
+              <Text style={[styles.planStatusText, { color: theme.muted }]}>
+                {planStatus}
+              </Text>
+            </View>
+          </View>
+          <Row
+            icon="pricetag-outline"
+            title="Our Plans"
+            theme={theme}
+            onPress={() => setShowPlans((prev) => !prev)}
+            right={
+              <Ionicons
+                name={showPlans ? "chevron-up" : "chevron-down"}
+                size={18}
+                color={theme.muted}
+              />
+            }
+            last={!showPlans}
+          />
+          {showPlans && (
+            <View style={styles.planGrid}>
+            <View style={[styles.planCard, { backgroundColor: theme.card }]}>
+                <View style={styles.planHeader}>
+                  <Text style={[styles.planTitle, { color: theme.text }]}>
+                    Free
+                  </Text>
+                  <View
+                    style={[
+                      styles.planTag,
+                      { borderColor: theme.border, backgroundColor: theme.cardAlt },
+                    ]}
+                  >
+                    <Text style={[styles.planTagText, { color: theme.muted }]}>
+                      Your basic plan
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.planPrice, { color: theme.text }]}>
+                  $0
+                  <Text style={[styles.planPeriod, { color: theme.muted }]}>
+                    /forever
+                  </Text>
+                </Text>
+                <View style={styles.planList}>
+                  <PlanItem
+                    text="Up to 3 semesters"
+                    theme={theme}
+                    included
+                  />
+                  <PlanItem
+                    text="Limited analytics"
+                    theme={theme}
+                    included
+                  />
+                  <PlanItem
+                    text="Normal email support"
+                    theme={theme}
+                    included
+                  />
+                </View>
+              </View>
+
+            <View style={[styles.planCard, { backgroundColor: theme.card }]}>
+              <View style={styles.planHeader}>
+                <Text style={[styles.planTitle, { color: theme.text }]}>Pro</Text>
+                <Pressable
+                  style={[
+                    styles.planButton,
+                    { backgroundColor: theme.accent },
+                  ]}
+                  onPress={() => handleUpgrade("monthly")}
+                  disabled={upgradeLoading === "monthly"}
+                >
+                  <Text style={styles.planButtonText}>
+                    {upgradeLoading === "monthly"
+                      ? "Loading..."
+                      : "Upgrade to Pro"}
+                  </Text>
+                </Pressable>
+              </View>
+              <Text style={[styles.planPrice, { color: theme.text }]}>
+                $2.99
+                <Text style={[styles.planPeriod, { color: theme.muted }]}>
+                    /month
+                  </Text>
+                </Text>
+                <View style={styles.planList}>
+                  <PlanItem
+                    text="Unlimited semesters"
+                    theme={theme}
+                    included
+                  />
+                  <PlanItem
+                    text="Full analytics access"
+                    theme={theme}
+                    included
+                  />
+                  <PlanItem
+                    text="Priority email support"
+                    theme={theme}
+                    included
+                  />
+                </View>
+              </View>
+
+            <View style={[styles.planCard, { backgroundColor: theme.card }]}>
+              <View style={styles.planHeader}>
+                <Text style={[styles.planTitle, { color: theme.text }]}>
+                  4-Month
+                </Text>
+                <View style={styles.planHeaderRight}>
+                  <View style={styles.saveBadge}>
+                    <Text style={styles.saveBadgeText}>Save 20%+</Text>
+                  </View>
+                  <Pressable
+                    style={[
+                      styles.planButton,
+                      { backgroundColor: theme.accent },
+                    ]}
+                    onPress={() => handleUpgrade("4month")}
+                    disabled={upgradeLoading === "4month"}
+                  >
+                    <Text style={styles.planButtonText}>
+                      {upgradeLoading === "4month"
+                        ? "Loading..."
+                        : "Upgrade to Pro"}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+              <Text style={[styles.planPrice, { color: theme.text }]}>
+                $9.49
+                <Text style={[styles.planPeriod, { color: theme.muted }]}>
+                    /4 months
+                  </Text>
+                </Text>
+                <View style={styles.planList}>
+                  <PlanItem
+                    text="Unlimited semesters"
+                    theme={theme}
+                    included
+                  />
+                  <PlanItem
+                    text="Full analytics access"
+                    theme={theme}
+                    included
+                  />
+                  <PlanItem
+                    text="Priority email support"
+                    theme={theme}
+                    included
+                  />
+                </View>
+              </View>
+            </View>
+          )}
         </Section>
 
         <Section title="DATA" theme={theme}>
@@ -266,6 +483,7 @@ export default function SettingsScreen({
             last
           />
         </Section>
+
       </ScrollView>
       <ConfirmModal
         visible={showClearConfirm}
@@ -369,6 +587,17 @@ function Stat({ value, label, theme }) {
     <View style={[styles.stat, { backgroundColor: theme.card }]}> 
       <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: theme.muted }]}>{label}</Text>
+    </View>
+  );
+}
+
+function PlanItem({ text, theme, included }) {
+  const icon = included ? "checkmark-circle" : "close-circle";
+  const color = included ? theme.success : theme.danger;
+  return (
+    <View style={styles.planItem}>
+      <Ionicons name={icon} size={16} color={color} />
+      <Text style={[styles.planItemText, { color: theme.muted }]}>{text}</Text>
     </View>
   );
 }
@@ -599,5 +828,106 @@ const styles = StyleSheet.create({
   linkButtonText: {
     fontSize: 12,
     fontWeight: "600",
+  },
+  planGrid: {
+    gap: 12,
+  },
+  planCard: {
+    borderRadius: 16,
+    padding: 16,
+  },
+  planHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    flexWrap: "wrap",
+    marginBottom: 6,
+  },
+  planHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  planTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  planPrice: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+  planPeriod: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  planList: {
+    gap: 8,
+  },
+  planItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  planItemText: {
+    fontSize: 12,
+  },
+  planTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  planTagText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  planButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  planButtonText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  saveBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#F56BB8",
+  },
+  saveBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  currentPlan: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  currentPlanLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  currentPlanValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  planStatus: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  planStatusText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
 });
