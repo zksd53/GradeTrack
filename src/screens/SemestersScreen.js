@@ -20,6 +20,7 @@ export default function SemestersScreen({
   semesters,
   billing,
   saveSemesters,
+  onOpenPlans,
   onOpenSemester,
 }) {
   const [showNewSemester, setShowNewSemester] = useState(false);
@@ -53,9 +54,19 @@ export default function SemestersScreen({
           style={[styles.addButton, { backgroundColor: theme.accent }]}
           onPress={() => {
             if (!canAddSemester) {
+              if (onOpenPlans) onOpenPlans();
               Alert.alert(
                 "Upgrade required",
-                "Free plan supports up to 3 semesters. Upgrade to Pro for unlimited semesters."
+                "Free plan supports up to 3 semesters. Upgrade to Pro for unlimited semesters.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "View plans",
+                    onPress: () => {
+                      if (onOpenPlans) onOpenPlans();
+                    },
+                  },
+                ]
               );
               return;
             }
@@ -83,11 +94,11 @@ export default function SemestersScreen({
         ))}
       </ScrollView>
 
-        <NewSemesterSheet
-          visible={showNewSemester}
-          onClose={() => setShowNewSemester(false)}
-          onCreate={handleAddSemester}
-        />
+      <NewSemesterSheet
+        visible={showNewSemester}
+        onClose={() => setShowNewSemester(false)}
+        onCreate={handleAddSemester}
+      />
     </SafeAreaView>
   );
 }

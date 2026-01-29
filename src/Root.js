@@ -39,6 +39,7 @@ export default function Root() {
     const [splashReady, setSplashReady] = useState(false);
     const [showSplash, setShowSplash] = useState(true);
     const [billing, setBilling] = useState(null);
+    const [openPlansOnSettings, setOpenPlansOnSettings] = useState(false);
     const splashOpacity = useRef(new Animated.Value(1)).current;
 
     const normalizeSemesters = (data) => {
@@ -308,6 +309,10 @@ export default function Root() {
                             semesters={semesters}
                             billing={billing}
                             saveSemesters={saveSemesters}
+                            onOpenPlans={() => {
+                                setActiveTab("settings");
+                                setOpenPlansOnSettings(true);
+                            }}
                             onOpenSemester={(id) => {
                                 setSelectedSemesterId(id);
                                 setSelectedCourseId(null);
@@ -439,6 +444,8 @@ export default function Root() {
                             semesters={semesters}
                             user={authUser}
                             billing={billing}
+                            openPlans={openPlansOnSettings}
+                            onPlansOpened={() => setOpenPlansOnSettings(false)}
                             onClearAll={() => {
                                 saveSemesters([]);
                             }}

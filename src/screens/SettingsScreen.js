@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ThemeContext } from "../theme";
 import { auth, functions } from "../firebase";
 import { httpsCallable } from "firebase/functions";
@@ -19,6 +19,8 @@ export default function SettingsScreen({
   semesters = [],
   user,
   billing,
+  openPlans,
+  onPlansOpened,
   onClearAll,
   onSignOut,
 }) {
@@ -28,6 +30,20 @@ export default function SettingsScreen({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(null);
+  const scrollRef = useRef(null);
+  const [plansOffsetY, setPlansOffsetY] = useState(0);
+
+  useEffect(() => {
+    if (openPlans) {
+      setShowPlans(true);
+      if (onPlansOpened) onPlansOpened();
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({ y: plansOffsetY, animated: true });
+        }
+      }, 120);
+    }
+  }, [openPlans, onPlansOpened, plansOffsetY]);
   const displayName =
     user?.displayName?.trim() ||
     (user?.email ? user.email.split("@")[0] : "GradeTrack User");
@@ -94,6 +110,7 @@ export default function SettingsScreen({
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <ScrollView
+        ref={scrollRef}
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -153,7 +170,13 @@ export default function SettingsScreen({
           />
         </Section>
 
-        <Section title="PLANS" theme={theme}>
+        <Section
+          title="PLANS"
+          theme={theme}
+          onLayout={(event) => {
+            setPlansOffsetY(event.nativeEvent.layout.y - 16);
+          }}
+        >
           <View style={[styles.currentPlan, { backgroundColor: theme.card }]}>
             <View>
               <Text style={[styles.currentPlanLabel, { color: theme.muted }]}>
@@ -498,9 +521,9 @@ export default function SettingsScreen({
   );
 }
 
-function Section({ title, children, theme }) {
+function Section({ title, children, theme, onLayout }) {
   return (
-    <View style={styles.section}>
+    <View style={styles.section} onLayout={onLayout}>
       <Text style={[styles.sectionTitle, { color: theme.muted }]}>{title}</Text>
       <View
         style={[styles.sectionCard, { backgroundColor: theme.card }]}

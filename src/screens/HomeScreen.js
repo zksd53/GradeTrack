@@ -1,8 +1,16 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  SafeAreaView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useContext, useState } from "react";
 import UpdateAssessmentSheet from "../components/UpdateAssessmentSheet";
 import { ThemeContext } from "../theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const gradeScale = [
   { min: 90, letter: "A", gpa: 4.0 },
@@ -138,6 +146,7 @@ export default function HomeScreen({
   onUpdateAssessment,
 }) {
   const { theme } = useContext(ThemeContext);
+  const insets = useSafeAreaInsets();
   const currentSemester = getCurrentSemester(semesters);
   const currentStats = currentSemester
     ? getSemesterStats(currentSemester)
@@ -150,33 +159,35 @@ export default function HomeScreen({
   const cumulativeRing = cumulativeGpa === null ? 0 : (cumulativeGpa / 4) * 100;
   const semesterRing =
     currentStats.semesterGpa === null ? 0 : (currentStats.semesterGpa / 4) * 100;
+  const heroTopPadding = Math.max(18, insets.top + 6);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      contentContainerStyle={{ paddingBottom: 120 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.hero}>
-        <View style={styles.heroTop}>
-          <View style={styles.brandRow}>
-            <Ionicons name="school-outline" size={16} color="#E0E7FF" />
-            <Text style={styles.brandText}>GradeTrack</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.hero, { paddingTop: heroTopPadding }]}>
+          <View style={styles.heroTop}>
+            <View style={styles.brandRow}>
+              <Ionicons name="school-outline" size={16} color="#E0E7FF" />
+              <Text style={styles.brandText}>GradeTrack</Text>
+            </View>
+            <Pressable
+              style={styles.updateButton}
+              onPress={() => setShowUpdateAssessment(true)}
+            >
+              <Text style={styles.updateButtonText}>Update Assessment</Text>
+            </Pressable>
           </View>
-          <Pressable
-            style={styles.updateButton}
-            onPress={() => setShowUpdateAssessment(true)}
-          >
-            <Text style={styles.updateButtonText}>Update Assessment</Text>
-          </Pressable>
+          <Text style={styles.welcome}>Welcome back! 👋</Text>
+          <Text style={styles.semester}>
+            {currentSemester
+              ? `${currentSemester.term} ${currentSemester.year}`
+              : "No current semester"}
+          </Text>
         </View>
-        <Text style={styles.welcome}>Welcome back! 👋</Text>
-        <Text style={styles.semester}>
-          {currentSemester
-            ? `${currentSemester.term} ${currentSemester.year}`
-            : "No current semester"}
-        </Text>
-      </View>
 
       <View style={styles.contentWrap}>
         <View style={styles.ringRow}>
@@ -246,18 +257,19 @@ export default function HomeScreen({
         })}
       </View>
 
-      <UpdateAssessmentSheet
-        visible={showUpdateAssessment}
-        onClose={() => setShowUpdateAssessment(false)}
-        courses={currentCourses}
-        onSave={(courseId, assessmentId, score) => {
-          if (!currentSemester || !onUpdateAssessment) return;
-          onUpdateAssessment(currentSemester.id, courseId, assessmentId, {
-            score,
-          });
-        }}
-      />
-    </ScrollView>
+        <UpdateAssessmentSheet
+          visible={showUpdateAssessment}
+          onClose={() => setShowUpdateAssessment(false)}
+          courses={currentCourses}
+          onSave={(courseId, assessmentId, score) => {
+            if (!currentSemester || !onUpdateAssessment) return;
+            onUpdateAssessment(currentSemester.id, courseId, assessmentId, {
+              score,
+            });
+          }}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -360,6 +372,9 @@ function ProgressRing({ value, progress, theme }) {
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -368,8 +383,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5B3FE4",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    padding: 24,
-    paddingTop: 28,
+    padding: 20,
   },
   heroTop: {
     flexDirection: "row",
