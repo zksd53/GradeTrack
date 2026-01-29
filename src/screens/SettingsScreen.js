@@ -450,7 +450,7 @@ export default function SettingsScreen({
                 Privacy Policy
               </Text>
               <Text style={[styles.expandText, { color: theme.muted }]}>
-                Your privacy matters to us. GradeTrack is designed to give you
+                Your privacy matters to us. TrackMyGrade is designed to give you
                 full control over your data.
               </Text>
               <Text style={[styles.expandText, { color: theme.muted }]}>
@@ -474,7 +474,7 @@ export default function SettingsScreen({
                 Data Usage
               </Text>
               <Text style={[styles.expandText, { color: theme.muted }]}>
-                GradeTrack collects only the data required to provide GPA
+                TrackMyGrade collects only the data required to provide GPA
                 calculation and academic tracking features.
               </Text>
               <Text style={[styles.expandText, { color: theme.muted }]}>
